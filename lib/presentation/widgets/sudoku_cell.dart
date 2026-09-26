@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/presentation/models/app_settings.dart';
 import 'package:sudoku/presentation/widgets/notes_grid.dart';
 
@@ -111,7 +111,7 @@ class SudokuCell extends StatelessWidget {
             return FadeTransition(
               opacity: animation,
               child: ScaleTransition(
-                scale: Tween(begin: .96, end: 1.0).animate(animation),
+                scale: Tween<double>(begin: .96, end: 1).animate(animation),
                 child: child,
               ),
             );

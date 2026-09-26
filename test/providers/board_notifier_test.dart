@@ -62,9 +62,7 @@ void main() {
       });
 
       test('pencil -> number', () {
-        final notifier = container.read(boardProvider.notifier);
-
-        notifier
+        container.read(boardProvider.notifier)
           ..toggleInputMode()
           ..toggleInputMode();
 
@@ -80,9 +78,7 @@ void main() {
       });
 
       test('replaces previous error cells', () {
-        final notifier = container.read(boardProvider.notifier);
-
-        notifier
+        container.read(boardProvider.notifier)
           ..setErrorCells({1, 2})
           ..setErrorCells({8});
 
@@ -90,9 +86,7 @@ void main() {
       });
 
       test('clears error cells', () {
-        final notifier = container.read(boardProvider.notifier);
-
-        notifier
+        container.read(boardProvider.notifier)
           ..setErrorCells({1, 2})
           ..setErrorCells({});
 

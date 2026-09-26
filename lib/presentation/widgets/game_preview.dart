@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/puzzle.dart';
 import 'package:sudoku/domain/models/sudoku_grid.dart';
 import 'package:sudoku/presentation/models/app_settings.dart';
@@ -151,7 +151,7 @@ class GamePreview extends StatelessWidget {
       ),
     );
 
-    const double btnSize = 26.0;
+    const double btnSize = 26;
     final digitButtons = <Widget>[];
     for (int i = 1; i <= 9; i++) {
       final count = counts[i] ?? 0;

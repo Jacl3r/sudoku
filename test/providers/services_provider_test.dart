@@ -91,7 +91,6 @@ void main() {
       ).copyWith(elapsed: const Duration(minutes: 2));
 
       final container = _makeContainer(
-        difficulty: .easy,
         continueGames: {
           Difficulty.easy: easySaved,
           Difficulty.hard: hardSaved,

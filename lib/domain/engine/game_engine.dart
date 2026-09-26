@@ -132,27 +132,23 @@ class GameEngine {
         final grid = _state.grid.clone()
           ..setValue(action.cellIndex, action.previousValue);
         _state = _state.copyWith(grid: grid, notes: newNotes, history: trimmed);
-        break;
       case PencilAction():
         final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
         newNotes[action.cellIndex] = Set<int>.from(action.previousNotes);
         final grid = _state.grid.clone()
           ..setValue(action.cellIndex, action.previousValue);
         _state = _state.copyWith(grid: grid, notes: newNotes, history: trimmed);
-        break;
       case EraseAction():
         final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
         newNotes[action.cellIndex] = Set<int>.from(action.previousNotes);
         final grid = _state.grid.clone()
           ..setValue(action.cellIndex, action.previousValue);
         _state = _state.copyWith(grid: grid, notes: newNotes, history: trimmed);
-        break;
       case AutoNotesAction():
         _state = _state.copyWith(
           notes: action.previousNotes.map(Set<int>.from).toList(),
           history: trimmed,
         );
-        break;
     }
   }
 

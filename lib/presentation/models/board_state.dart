@@ -42,11 +42,12 @@ class BoardState {
 
   @override
   String toString() {
-    return '''BoardState:
-    selectedCell: $selectedCell
-    selectedDigit: $selectedDigit
-    inputMode: $inputMode
-    errorCells: $errorCells
+    return '''
+BoardState:
+  selectedCell: $selectedCell
+  selectedDigit: $selectedDigit
+  inputMode: $inputMode
+  errorCells: $errorCells
 ''';
   }
 }

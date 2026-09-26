@@ -22,11 +22,10 @@ class TestStatRecords {
     completedAt: DateTime.fromMillisecondsSinceEpoch(epochMs),
   );
 
-  static StatRecord easyClean() =>
-      record(difficulty: .easy, seconds: 95, epochMs: 1000);
+  static StatRecord easyClean() => record(seconds: 95, epochMs: 1000);
 
   static StatRecord easyAssisted() =>
-      record(difficulty: .easy, seconds: 140, hints: true, epochMs: 2000);
+      record(seconds: 140, hints: true, epochMs: 2000);
 
   static StatRecord mediumClean() =>
       record(difficulty: .medium, seconds: 210, epochMs: 3000);

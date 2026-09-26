@@ -1,8 +1,8 @@
 import 'dart:developer';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/data/hive_boxes.dart';
 import 'package:sudoku/presentation/screens/home_screen.dart';
 import 'package:sudoku/presentation/widgets/no_scrollbar_behavior.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class NotesGrid extends StatelessWidget {
   const NotesGrid({
@@ -114,7 +114,6 @@ class FixedNotesGrid extends StatelessWidget {
       padding: .zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 1,
       ),
       itemCount: 9,
       itemBuilder: (context, index) {

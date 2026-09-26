@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/engine/game_utils.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
@@ -69,7 +69,7 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  final file = await FilePicker.pickFile(type: .any);
+                  final file = await FilePicker.pickFile();
                   if (file == null) return;
                   final bytes = await file.readAsBytes();
                   final raw = String.fromCharCodes(bytes);

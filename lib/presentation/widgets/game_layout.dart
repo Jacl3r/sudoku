@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class GameLayout extends StatelessWidget {
   const GameLayout({
@@ -41,7 +41,6 @@ class GameLayout extends StatelessWidget {
     final gridWidget = SizedBox(width: gridSize, height: gridSize, child: grid);
 
     final row = Row(
-      crossAxisAlignment: .center,
       mainAxisAlignment: .center,
       children: [gridWidget, const SizedBox(width: 16), digitPad],
     );

@@ -31,9 +31,7 @@ void main() {
       });
 
       test('accumulates across multiple ticks', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..tick(kTick)
           ..tick(kTick)
           ..tick(kTick);
@@ -44,34 +42,26 @@ void main() {
 
     group('inputDigit', () {
       test('places digit on empty cell', () {
-        final engine = _makeEngine();
-
-        engine.inputDigit(2, 4);
+        final engine = _makeEngine()..inputDigit(2, 4);
 
         expect(engine.currentState.grid.valueAt(2), 4);
       });
 
       test('records DigitAction in history', () {
-        final engine = _makeEngine();
-
-        engine.inputDigit(2, 4);
+        final engine = _makeEngine()..inputDigit(2, 4);
 
         expect(engine.currentState.history.last, isA<DigitAction>());
       });
 
       test('ignores given cells', () {
-        final engine = _makeEngine();
-
-        engine.inputDigit(0, 9);
+        final engine = _makeEngine()..inputDigit(0, 9);
 
         expect(engine.currentState.grid.valueAt(0), 5);
         expect(engine.currentState.history, isEmpty);
       });
 
       test('same digit on filled cell erases it', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..inputDigit(2, 4);
 
@@ -79,9 +69,7 @@ void main() {
       });
 
       test('clears own cell notes on placement', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 3)
           ..toggleNote(2, 5)
           ..inputDigit(2, 4);
@@ -90,20 +78,17 @@ void main() {
       });
 
       test('does not remove peer notes when autoRemoveNotes is false', () {
-        final engine = _makeEngine();
-
-        engine.toggleNote(5, 4);
-        engine.inputDigit(2, 4, autoRemoveNotes: false);
+        final engine = _makeEngine()
+          ..toggleNote(5, 4)
+          ..inputDigit(2, 4);
 
         expect(engine.currentState.notes[5], contains(4));
       });
 
       test('removes digit from peer notes when autoRemoveNotes is true', () {
-        final engine = _makeEngine();
-
-        engine.toggleNote(5, 4);
-
-        engine.inputDigit(2, 4, autoRemoveNotes: true);
+        final engine = _makeEngine()
+          ..toggleNote(5, 4)
+          ..inputDigit(2, 4, autoRemoveNotes: true);
 
         expect(engine.currentState.notes[5], isNot(contains(4)));
       });
@@ -143,17 +128,13 @@ void main() {
 
     group('toggleNote', () {
       test('adds digit to notes', () {
-        final engine = _makeEngine();
-
-        engine.toggleNote(2, 4);
+        final engine = _makeEngine()..toggleNote(2, 4);
 
         expect(engine.currentState.notes[2], contains(4));
       });
 
       test('removes digit if already present', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 4)
           ..toggleNote(2, 4);
 
@@ -161,9 +142,7 @@ void main() {
       });
 
       test('can hold multiple digits', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 3)
           ..toggleNote(2, 5)
           ..toggleNote(2, 7);
@@ -172,26 +151,20 @@ void main() {
       });
 
       test('records PencilAction in history', () {
-        final engine = _makeEngine();
-
-        engine.toggleNote(2, 4);
+        final engine = _makeEngine()..toggleNote(2, 4);
 
         expect(engine.currentState.history.last, isA<PencilAction>());
       });
 
       test('ignores given cells', () {
-        final engine = _makeEngine();
-
-        engine.toggleNote(0, 4);
+        final engine = _makeEngine()..toggleNote(0, 4);
 
         expect(engine.currentState.notes[0], isEmpty);
         expect(engine.currentState.history, isEmpty);
       });
 
       test('does not write a grid value', () {
-        final engine = _makeEngine();
-
-        engine.toggleNote(2, 4);
+        final engine = _makeEngine()..toggleNote(2, 4);
 
         expect(engine.currentState.grid.valueAt(2), 0);
       });
@@ -199,9 +172,7 @@ void main() {
 
     group('erase', () {
       test('clears a placed digit', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..erase(2);
 
@@ -209,9 +180,7 @@ void main() {
       });
 
       test('clears notes', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 3)
           ..toggleNote(2, 5)
           ..erase(2);
@@ -220,9 +189,7 @@ void main() {
       });
 
       test('records EraseAction in history', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..erase(2);
 
@@ -230,17 +197,13 @@ void main() {
       });
 
       test('is a no-op on already empty cell with no notes', () {
-        final engine = _makeEngine();
-
-        engine.erase(2);
+        final engine = _makeEngine()..erase(2);
 
         expect(engine.currentState.history, isEmpty);
       });
 
       test('ignores given cells', () {
-        final engine = _makeEngine();
-
-        engine.erase(0);
+        final engine = _makeEngine()..erase(0);
 
         expect(engine.currentState.grid.valueAt(0), 5);
         expect(engine.currentState.history, isEmpty);
@@ -249,9 +212,7 @@ void main() {
 
     group('undo', () {
       test('is a no-op when history is empty', () {
-        final engine = _makeEngine();
-
-        engine.undo();
+        final engine = _makeEngine()..undo();
 
         expect(engine.currentState.history, isEmpty);
       });
@@ -261,17 +222,13 @@ void main() {
       });
 
       test('canUndo is true after an action', () {
-        final engine = _makeEngine();
-
-        engine.inputDigit(2, 4);
+        final engine = _makeEngine()..inputDigit(2, 4);
 
         expect(engine.canUndo, isTrue);
       });
 
       test('canUndo is false after undoing the only action', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..undo();
 
@@ -279,9 +236,7 @@ void main() {
       });
 
       test('reverts DigitAction — restores grid value', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..undo();
 
@@ -289,9 +244,7 @@ void main() {
       });
 
       test('reverts DigitAction — removes from history', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..undo();
 
@@ -299,13 +252,9 @@ void main() {
       });
 
       test('reverts DigitAction — restores cleared cell notes', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 3)
-          ..toggleNote(2, 5);
-
-        engine
+          ..toggleNote(2, 5)
           ..inputDigit(2, 4)
           ..undo();
 
@@ -315,11 +264,9 @@ void main() {
       test(
         'reverts DigitAction — restores peer notes removed by autoRemoveNotes',
         () {
-          final engine = _makeEngine();
-
-          engine.toggleNote(5, 4);
-
-          engine.inputDigit(2, 4, autoRemoveNotes: true);
+          final engine = _makeEngine()
+            ..toggleNote(5, 4)
+            ..inputDigit(2, 4, autoRemoveNotes: true);
           expect(engine.currentState.notes[5], isNot(contains(4)));
 
           engine.undo();
@@ -328,9 +275,7 @@ void main() {
       );
 
       test('reverts PencilAction — removes added note', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 4)
           ..undo();
 
@@ -338,9 +283,7 @@ void main() {
       });
 
       test('reverts PencilAction — restores removed note', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 4)
           ..toggleNote(2, 4)
           ..undo();
@@ -349,9 +292,7 @@ void main() {
       });
 
       test('reverts EraseAction — restores grid value', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..erase(2)
           ..undo();
@@ -360,9 +301,7 @@ void main() {
       });
 
       test('reverts EraseAction — restores notes', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..toggleNote(2, 3)
           ..toggleNote(2, 5)
           ..erase(2)
@@ -372,9 +311,7 @@ void main() {
       });
 
       test('reverts AutoNotesAction', () {
-        final engine = _makeEngine();
-
-        engine.autoFillNotes();
+        final engine = _makeEngine()..autoFillNotes();
         expect(engine.currentState.notes.any((s) => s.isNotEmpty), isTrue);
 
         engine.undo();
@@ -382,9 +319,7 @@ void main() {
       });
 
       test('multiple undo walk back multiple actions', () {
-        final engine = _makeEngine();
-
-        engine
+        final engine = _makeEngine()
           ..inputDigit(2, 4)
           ..inputDigit(3, 6)
           ..undo()
@@ -407,9 +342,7 @@ void main() {
       });
 
       test('sets assists.hints to true', () {
-        final engine = _makeEngine();
-
-        engine.revealHint();
+        final engine = _makeEngine()..revealHint();
 
         expect(engine.currentState.assists.hints, isTrue);
       });
@@ -476,18 +409,15 @@ void main() {
       });
 
       test('sets assists.validation to true', () {
-        final engine = _makeEngine();
-
-        engine.findErrors();
+        final engine = _makeEngine()..findErrors();
 
         expect(engine.currentState.assists.validation, isTrue);
       });
 
       test('stays true after being set', () {
-        final engine = _makeEngine();
-
-        engine.findErrors();
-        engine.findErrors();
+        final engine = _makeEngine()
+          ..findErrors()
+          ..findErrors();
 
         expect(engine.currentState.assists.validation, isTrue);
       });
@@ -495,17 +425,13 @@ void main() {
 
     group('autoFillNotes', () {
       test('fills notes on empty non-given cells', () {
-        final engine = _makeEngine();
-
-        engine.autoFillNotes();
+        final engine = _makeEngine()..autoFillNotes();
 
         expect(engine.currentState.notes.any((s) => s.isNotEmpty), isTrue);
       });
 
       test('only includes valid candidates', () {
-        final engine = _makeEngine();
-
-        engine.autoFillNotes();
+        final engine = _makeEngine()..autoFillNotes();
 
         final state = engine.currentState;
         for (var i = 0; i < 81; i++) {
@@ -522,34 +448,27 @@ void main() {
       });
 
       test('skips given cells', () {
-        final engine = _makeEngine();
-
-        engine.autoFillNotes();
+        final engine = _makeEngine()..autoFillNotes();
 
         expect(engine.currentState.notes[0], isEmpty);
       });
 
       test('skips filled cells', () {
-        final engine = _makeEngine();
-
-        engine.inputDigit(2, 4);
-        engine.autoFillNotes();
+        final engine = _makeEngine()
+          ..inputDigit(2, 4)
+          ..autoFillNotes();
 
         expect(engine.currentState.notes[2], isEmpty);
       });
 
       test('records AutoNotesAction in history', () {
-        final engine = _makeEngine();
-
-        engine.autoFillNotes();
+        final engine = _makeEngine()..autoFillNotes();
 
         expect(engine.currentState.history.last, isA<AutoNotesAction>());
       });
 
       test('sets assists.autoNotes to true', () {
-        final engine = _makeEngine();
-
-        engine.autoFillNotes();
+        final engine = _makeEngine()..autoFillNotes();
 
         expect(engine.currentState.assists.autoNotes, isTrue);
       });

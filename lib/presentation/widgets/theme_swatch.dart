@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/presentation/models/theme_config.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 import 'package:sudoku/providers/theme_provider.dart';

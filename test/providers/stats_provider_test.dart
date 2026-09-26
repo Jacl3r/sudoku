@@ -58,7 +58,7 @@ void main() {
       final stats = FakeStatsService();
       await stats.save(_record(difficulty: Difficulty.medium, seconds: 90));
       await stats.save(_record(difficulty: Difficulty.medium, seconds: 120));
-      await stats.save(_record(difficulty: Difficulty.easy, seconds: 30));
+      await stats.save(_record(seconds: 30));
 
       final container = _makeContainer(statsService: stats);
 
@@ -104,9 +104,9 @@ void main() {
     test('sorts independently and limits to 10', () async {
       final stats = FakeStatsService();
       await stats.save(_record(seconds: 200, hints: true));
-      await stats.save(_record(seconds: 50, hints: false));
+      await stats.save(_record(seconds: 50));
       await stats.save(_record(seconds: 100, hints: true));
-      await stats.save(_record(seconds: 75, hints: false));
+      await stats.save(_record(seconds: 75));
 
       final container = _makeContainer(statsService: stats);
 

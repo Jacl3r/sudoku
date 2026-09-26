@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/presentation/models/theme_config.dart';
 import 'package:sudoku/presentation/widgets/theme_swatch.dart';
 import 'package:sudoku/providers/settings_provider.dart';
@@ -33,7 +33,7 @@ class _ThemeSelectorState extends ConsumerState<ThemeSelector>
 
     _opacity = CurvedAnimation(parent: _animation, curve: Curves.easeOutCubic);
 
-    _scale = Tween(begin: .95, end: 1.0).animate(
+    _scale = Tween<double>(begin: .95, end: 1).animate(
       CurvedAnimation(
         parent: _animation,
         curve: Curves.easeOutBack,

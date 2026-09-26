@@ -96,7 +96,8 @@ void main() {
           difficulty: .easy,
         ).copyWith(elapsed: const Duration(minutes: 3));
 
-        final service = FakeSaveGameService()..save(savedState);
+        final service = FakeSaveGameService();
+        await service.save(savedState);
 
         container = ProviderContainer(
           overrides: [
@@ -177,9 +178,7 @@ void main() {
 
       test('reads autoRemoveNotes from settingsProvider', () async {
         container.dispose();
-        container = _makeContainer(
-          settings: const AppSettings(autoRemoveNotes: true),
-        );
+        container = _makeContainer();
         await pumpGame(container);
 
         container.read(boardProvider.notifier).toggleInputMode();

@@ -25,8 +25,8 @@ bool hasNotes(GameState state, int index) => state.notes[index].isNotEmpty;
 
 String parsePuzzleInput(String raw) {
   final puzzle = raw
-      .replaceAll(RegExp(r'[.xX_]'), '0')
-      .replaceAll(RegExp(r'[^0-9]'), '');
+      .replaceAll(RegExp('[.xX_]'), '0')
+      .replaceAll(RegExp('[^0-9]'), '');
 
   if (puzzle.length != 81) {
     throw FormatException('Found ${puzzle.length} characters, expected 81.');

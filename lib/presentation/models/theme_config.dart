@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 const builtInThemes = [
   ThemeConfig(seedColor: Color(0xFF1C0420)),
