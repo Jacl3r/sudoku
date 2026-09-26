@@ -1,5 +1,7 @@
-import java.util.Properties
+import com.android.build.api.variant.FilterConfiguration.FilterType
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -8,25 +10,25 @@ plugins {
 }
 
 val keystoreProperties = Properties()
-val keystorePropertiesFile: File? = rootProject.file("key.properties")
-if (keystorePropertiesFile?.exists() ?: false) {
+val keystorePropertiesFile: File = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists() ?: false) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
     namespace = "com.likhithpraveenk.sudoku"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     defaultConfig {
         applicationId = "com.likhithpraveenk.sudoku"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 24
+        targetSdk = 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -43,14 +45,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            optimization {
+                enable = true
+            }
             signingConfig = when {
-                keystorePropertiesFile?.exists() == true -> signingConfigs.getByName("release")
+                keystorePropertiesFile.exists() -> signingConfigs.getByName("release")
                 else -> {
                     println("WARNING: No signing credentials found. Building unsigned apk")
                     null
@@ -70,9 +69,9 @@ android {
         val variant = this
         variant.outputs.forEach { output ->
             val abiVersionCode =
-                abiCodes[output.filters.find { it.filterType == "ABI" }?.identifier]
+                abiCodes[output.filters.find { it.filterType == FilterType.ABI.name }?.identifier]
             if (abiVersionCode != null) {
-                (output as com.android.build.gradle.internal.api.ApkVariantOutputImpl).versionCodeOverride =
+                (output as ApkVariantOutputImpl).versionCodeOverride =
                     variant.versionCode * 10 + abiVersionCode
             }
         }
@@ -81,7 +80,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     }
 }
 
