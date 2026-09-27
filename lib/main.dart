@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/data/hive_boxes.dart';
 import 'package:sudoku/presentation/screens/home_screen.dart';
 import 'package:sudoku/presentation/widgets/no_scrollbar_behavior.dart';
+import 'package:sudoku/providers/is_background_provider.dart';
 import 'package:sudoku/providers/theme_provider.dart';
 
 const kLogRiverpod = false;
@@ -55,6 +56,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(pauseTimerProvider);
     final theme = ref.watch(currentThemeProvider);
     return MaterialApp(
       debugShowCheckedModeBanner: false,

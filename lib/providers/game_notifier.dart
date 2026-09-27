@@ -31,11 +31,13 @@ class GameNotifier extends AsyncNotifier<GameState?> {
   GameEngine? _gameEngine;
   Timer? _timer;
   BoardState get board => ref.read(boardProvider);
+  bool _disposed = false;
 
   @override
   Future<GameState?> build() async {
     final saveGameService = ref.read(saveGameServiceProvider);
     ref.onDispose(() {
+      _disposed = true;
       _timer?.cancel();
       final engine = _gameEngine;
       if (engine != null) {
@@ -53,7 +55,7 @@ class GameNotifier extends AsyncNotifier<GameState?> {
     final initialState = saved ?? await _generateNew(difficulty);
 
     _gameEngine = GameEngine(initialState);
-    _startTimer();
+    startTimer();
     return _gameEngine?.currentState;
   }
 
@@ -64,11 +66,17 @@ class GameNotifier extends AsyncNotifier<GameState?> {
     return GameState.newGame(puzzle: puzzle, difficulty: difficulty);
   }
 
-  void _startTimer() {
+  void startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(kTick, (_) {
+      if (_disposed) return;
       _gameEngine?.tick(kTick);
       state = AsyncData(_gameEngine?.currentState);
     });
+  }
+
+  void pauseTimer() {
+    _timer?.cancel();
   }
 
   void inputDigit(int cellIndex, int digit) {
