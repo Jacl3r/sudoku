@@ -13,7 +13,7 @@ jobs:
         with:
           channel: stable
           flutter-version-file: ./pubspec.yaml
-          cache: true
+          cache: false
 
       - run: flutter pub get --enforce-lockfile
 
