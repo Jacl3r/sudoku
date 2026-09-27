@@ -18,4 +18,6 @@ class TestPuzzles {
 
   static const tooLong =
       '53007000060019500009800006080006000340080300170002000606000028000041900500008007';
+
+  static final empty = List.filled(81, '0').join();
 }

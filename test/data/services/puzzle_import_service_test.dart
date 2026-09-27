@@ -31,5 +31,24 @@ void main() {
       );
       await service.sharePuzzle(state);
     });
+
+    test('loadPuzzleIntoGame throws for puzzle with no solution', () async {
+      final service = PuzzleImportService();
+      expect(
+        () => service.loadPuzzleIntoGame(TestPuzzles.rowConflict),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test(
+      'loadPuzzleIntoGame throws for puzzle with multiple solutions',
+      () async {
+        final service = PuzzleImportService();
+        expect(
+          () => service.loadPuzzleIntoGame(TestPuzzles.empty),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
   });
 }

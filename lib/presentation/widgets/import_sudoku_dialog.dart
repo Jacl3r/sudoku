@@ -56,6 +56,7 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
                     'Paste 81-digit puzzle here. The gaps can be `0`, `.`, `x`, `X`, `_`',
                 border: const OutlineInputBorder(),
                 errorText: errorText,
+                errorMaxLines: 4,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
