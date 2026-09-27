@@ -8,6 +8,11 @@ on:
 jobs:
   android:
     uses: ./.github/workflows/build-android.yml
+    secrets:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
   ios:
     uses: ./.github/workflows/build-ios.yml
