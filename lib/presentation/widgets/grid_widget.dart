@@ -3,19 +3,30 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/presentation/widgets/sudoku_cell.dart';
 import 'package:sudoku/providers/board_notifier.dart';
+import 'package:sudoku/providers/coach_provider.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 
 class GridWidget extends StatelessWidget {
-  const GridWidget({required this.gameState, super.key});
+  const GridWidget({
+    required this.gameState,
+    this.reservedHeight = 0,
+    super.key,
+  });
 
   final GameState gameState;
+
+  /// Extra vertical space other widgets need (e.g. the coach bar).
+  final double reservedHeight;
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.sizeOf(context);
     final availableHeight =
-        mq.height - (Scaffold.of(context).appBarMaxHeight ?? 56.0) - 220.0;
+        mq.height -
+        (Scaffold.of(context).appBarMaxHeight ?? 56.0) -
+        220.0 -
+        reservedHeight;
     final maxGrid = availableHeight > 200 ? availableHeight : mq.width - 16;
     final size = maxGrid.clamp(0.0, mq.width - 16).clamp(0.0, 520.0);
 
@@ -74,6 +85,9 @@ class _Cell extends ConsumerWidget {
     final value = gameState.grid.valueAt(index);
     final notes = gameState.notes[index];
 
+    final coach = ref.watch(activeCoachProvider);
+    final coachView = CoachCellView.of(coach, index);
+
     final activeDigit =
         board.selectedDigit ??
         (board.selectedCell != null
@@ -120,6 +134,7 @@ class _Cell extends ConsumerWidget {
         maskGivenCells: maskGivenCells,
         notesLayout: settings.notesLayout,
         removeAnimations: settings.removeAnimations,
+        coach: coachView,
       ),
     );
   }

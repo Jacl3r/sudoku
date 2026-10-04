@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/providers/board_notifier.dart';
+import 'package:sudoku/providers/coach_provider.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 
 class ActionRow extends ConsumerWidget {
@@ -26,7 +27,7 @@ class ActionRow extends ConsumerWidget {
           ),
           _ActionButton(
             icon: Icons.lightbulb_outline_rounded,
-            onTap: () => _showMoreSheet(context, gameNotifier),
+            onTap: () => _showMoreSheet(context, ref, gameNotifier),
             tooltip: 'Hint',
           ),
           _ActionButton(
@@ -79,6 +80,7 @@ class ActionRow extends ConsumerWidget {
 
   Future<void> _showMoreSheet(
     BuildContext context,
+    WidgetRef ref,
     GameNotifier notifier,
   ) async {
     await showModalBottomSheet<void>(
@@ -91,6 +93,18 @@ class ActionRow extends ConsumerWidget {
             children: [
               Text('Hints', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.school_outlined),
+                title: const Text('Next step'),
+                subtitle: const Text('A tip in stages, not the answer'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  final game = ref.read(gameProvider).value;
+                  if (game != null) {
+                    ref.read(coachProvider.notifier).start(game);
+                  }
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.lightbulb_outline_rounded),
                 title: const Text('Reveal a cell'),

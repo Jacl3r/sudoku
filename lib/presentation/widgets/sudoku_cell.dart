@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/presentation/models/app_settings.dart';
 import 'package:sudoku/presentation/widgets/notes_grid.dart';
+import 'package:sudoku/providers/coach_provider.dart';
 
 class SudokuCell extends StatelessWidget {
   const SudokuCell({
@@ -16,6 +17,7 @@ class SudokuCell extends StatelessWidget {
     required this.maskGivenCells,
     this.notesLayout = .grid,
     this.removeAnimations = false,
+    this.coach = CoachCellView.empty,
     super.key,
   });
 
@@ -31,6 +33,7 @@ class SudokuCell extends StatelessWidget {
   final bool maskGivenCells;
   final NotesLayout notesLayout;
   final bool removeAnimations;
+  final CoachCellView coach;
 
   Duration get _animationDuration =>
       removeAnimations ? Duration.zero : const Duration(milliseconds: 250);
@@ -49,9 +52,33 @@ class SudokuCell extends StatelessWidget {
       width: 1.6,
     );
 
-    final baseColor = isGiven && maskGivenCells
+    final plainColor = isGiven && maskGivenCells
         ? scheme.outlineVariant
         : scheme.surface;
+    final baseColor = switch (coach.tint) {
+      CoachTint.none => plainColor,
+      CoachTint.area => Color.alphaBlend(
+        scheme.primary.withValues(alpha: 0.08),
+        plainColor,
+      ),
+      CoachTint.pattern => Color.alphaBlend(
+        scheme.primary.withValues(alpha: 0.22),
+        plainColor,
+      ),
+      CoachTint.target => Color.alphaBlend(
+        scheme.tertiary.withValues(alpha: 0.28),
+        plainColor,
+      ),
+    };
+    final coachBorder = switch (coach.tint) {
+      CoachTint.pattern => scheme.primary,
+      CoachTint.target => scheme.tertiary,
+      _ => null,
+    };
+    final hasCoachNotes = coach.mark.isNotEmpty || coach.strike.isNotEmpty;
+    final shownNotes = value == 0 && hasCoachNotes
+        ? <int>{...notes, ...coach.mark, ...coach.strike}
+        : notes;
 
     final highlightColor = isError ? scheme.errorContainer : scheme.primary;
 
@@ -82,6 +109,9 @@ class SudokuCell extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: baseColor,
                   borderRadius: .circular(6),
+                  border: coachBorder == null
+                      ? null
+                      : Border.all(color: coachBorder, width: 1.5),
                 ),
               ),
               Transform.scale(
@@ -128,19 +158,23 @@ class SudokuCell extends StatelessWidget {
                 ),
               ),
             ),
-            _ when notes.isNotEmpty => Padding(
+            _ when shownNotes.isNotEmpty => Padding(
               key: const ValueKey('notes'),
               padding: const .all(2),
               child: switch (notesLayout) {
                 .grid => NotesGrid(
-                  notes: notes,
+                  notes: shownNotes,
                   cellSize: size,
                   hasNoteOfSameDigit: hasNoteOfSameDigit || isSelected,
+                  mark: coach.mark,
+                  strike: coach.strike,
                 ),
                 .fixed => FixedNotesGrid(
-                  notes: notes,
+                  notes: shownNotes,
                   cellSize: size,
                   hasNoteOfSameDigit: hasNoteOfSameDigit || isSelected,
+                  mark: coach.mark,
+                  strike: coach.strike,
                 ),
               },
             ),

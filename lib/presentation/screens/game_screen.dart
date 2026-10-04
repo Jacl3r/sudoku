@@ -4,12 +4,15 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/presentation/shared/utils.dart';
 import 'package:sudoku/presentation/widgets/action_row.dart';
+import 'package:sudoku/presentation/widgets/coach_bar.dart';
 import 'package:sudoku/presentation/widgets/digit_pad.dart';
+import 'package:sudoku/presentation/widgets/export_sheet.dart';
 import 'package:sudoku/presentation/widgets/game_layout.dart';
 import 'package:sudoku/presentation/widgets/grid_widget.dart';
 import 'package:sudoku/presentation/widgets/solved_overlay.dart';
 import 'package:sudoku/presentation/widgets/theme_selector.dart';
 import 'package:sudoku/providers/board_notifier.dart';
+import 'package:sudoku/providers/coach_provider.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/settings_provider.dart';
@@ -125,7 +128,23 @@ class GameScreen extends ConsumerWidget {
                         formatTime(game.elapsed),
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
-                    const ThemeSelector(),
+                    Row(
+                      mainAxisSize: .min,
+                      children: [
+                        if (game != null && !game.puzzleComplete)
+                          IconButton(
+                            tooltip: 'Export',
+                            onPressed: () {
+                              final current = ref.read(gameProvider).value;
+                              if (current != null) {
+                                showExportSheet(context, current);
+                              }
+                            },
+                            icon: const Icon(Icons.ios_share_rounded),
+                          ),
+                        const ThemeSelector(),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -178,13 +197,25 @@ class _GameBodyState extends ConsumerState<_GameBody>
           showSolvedOverlay(context, ref, record);
         }
         ref.read(boardProvider.notifier).reset();
+        ref.read(coachProvider.notifier).close();
       }
     });
 
-    final grid = GridWidget(gameState: widget.state);
+    final coachActive = ref.watch(activeCoachProvider) != null;
+    final isPortrait = MediaQuery.orientationOf(context) == .portrait;
+
+    final grid = GridWidget(
+      gameState: widget.state,
+      reservedHeight: coachActive && isPortrait ? kCoachBarHeight + 16 : 0,
+    );
     const action = ActionRow();
     final digits = DigitPad(state: widget.state);
 
-    return GameLayout(grid: grid, digitPad: digits, actionRow: action);
+    return GameLayout(
+      grid: grid,
+      digitPad: digits,
+      actionRow: action,
+      coachBar: coachActive ? const CoachBar() : null,
+    );
   }
 }

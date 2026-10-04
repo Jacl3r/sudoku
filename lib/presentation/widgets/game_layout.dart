@@ -5,12 +5,14 @@ class GameLayout extends StatelessWidget {
     required this.grid,
     required this.digitPad,
     required this.actionRow,
+    this.coachBar,
     super.key,
   });
 
   final Widget grid;
   final Widget digitPad;
   final Widget actionRow;
+  final Widget? coachBar;
 
   static const double _landscapeGridSizeFraction = 0.6;
 
@@ -24,7 +26,7 @@ class GameLayout extends StatelessWidget {
     return Column(
       mainAxisAlignment: .end,
       spacing: 16,
-      children: [grid, digitPad, actionRow],
+      children: [grid, ?coachBar, digitPad, actionRow],
     );
   }
 
@@ -48,6 +50,7 @@ class GameLayout extends StatelessWidget {
     return Column(
       children: [
         Expanded(child: Center(child: row)),
+        ?coachBar,
         actionRow,
         const SizedBox(height: 12),
       ],

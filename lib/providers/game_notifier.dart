@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sudoku/domain/coach/coach_step.dart';
 import 'package:sudoku/domain/engine/game_engine.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
@@ -113,6 +114,21 @@ class GameNotifier extends AsyncNotifier<GameState?> {
   void hint() {
     final autoRemoveNotes = ref.read(settingsProvider).autoRemoveNotes;
     _gameEngine?.revealHint(autoRemoveNotes: autoRemoveNotes);
+    state = AsyncData(_gameEngine?.currentState);
+    if (_gameEngine?.currentState.puzzleComplete == true) {
+      _onPuzzleComplete();
+    }
+  }
+
+  void markHintUsed() {
+    _gameEngine?.markHintUsed();
+    state = AsyncData(_gameEngine?.currentState);
+  }
+
+  void applyCoachStep(CoachStep step) {
+    final autoRemoveNotes = ref.read(settingsProvider).autoRemoveNotes;
+    _gameEngine?.applyCoachStep(step, autoRemoveNotes: autoRemoveNotes);
+    ref.read(boardProvider.notifier).setErrorCells({});
     state = AsyncData(_gameEngine?.currentState);
     if (_gameEngine?.currentState.puzzleComplete == true) {
       _onPuzzleComplete();

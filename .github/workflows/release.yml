@@ -1,9 +1,8 @@
 name: Release
 
+# Disabled in this fork, see fork-android.yml.
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 jobs:
   android:

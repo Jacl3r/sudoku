@@ -1,0 +1,100 @@
+name: Fork Android
+
+# Every push runs analyze and tests. A tag like v1.2.0 (or a manual run)
+# also builds a signed APK. Tags publish it as a GitHub release, which
+# Obtainium picks up.
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: ./pubspec.yaml
+          cache: true
+
+      - run: flutter pub get --enforce-lockfile
+
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - run: flutter test
+
+  apk:
+    name: Build APK
+    needs: check
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: ./pubspec.yaml
+          cache: true
+
+      - run: flutter pub get --enforce-lockfile
+
+      - name: Set up signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::No signing secrets set. Add KEYSTORE_BASE64, KEY_ALIAS, KEYSTORE_PASSWORD and KEY_PASSWORD under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+          cat > android/key.properties <<PROPS
+          keyAlias=$KEY_ALIAS
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          storeFile=release.keystore
+          PROPS
+
+      - name: Build APKs
+        run: flutter build apk --release --split-per-abi --no-pub
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f android/app/release.keystore android/key.properties
+
+      - name: Rename APKs
+        run: |
+          PREFIX="sudoku-plus-${GITHUB_REF_NAME//\//-}"
+          cd build/app/outputs/flutter-apk/
+          mv app-arm64-v8a-release.apk   "${PREFIX}-arm64.apk"
+          mv app-armeabi-v7a-release.apk "${PREFIX}-armeabi.apk"
+          mv app-x86_64-release.apk      "${PREFIX}-x86_64.apk"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: build/app/outputs/flutter-apk/*.apk
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          files: build/app/outputs/flutter-apk/*.apk

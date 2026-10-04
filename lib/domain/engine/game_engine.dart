@@ -1,3 +1,5 @@
+import 'package:sudoku/domain/coach/coach.dart';
+import 'package:sudoku/domain/coach/coach_step.dart';
 import 'package:sudoku/domain/engine/game_utils.dart';
 import 'package:sudoku/domain/engine/grid_utils.dart';
 import 'package:sudoku/domain/models/game_action.dart';
@@ -161,6 +163,47 @@ class GameEngine {
 
     _state = _state.copyWith(assists: _state.assists.copyWith(hints: true));
     inputDigit(result.index, result.correct, autoRemoveNotes: autoRemoveNotes);
+  }
+
+  void markHintUsed() {
+    _state = _state.copyWith(assists: _state.assists.copyWith(hints: true));
+  }
+
+  /// Applies a coach step. Note changes are undone in one go.
+  void applyCoachStep(CoachStep step, {bool autoRemoveNotes = false}) {
+    markHintUsed();
+    final eraseCell = step.erase;
+    if (eraseCell != null) {
+      erase(eraseCell);
+      return;
+    }
+    final placement = step.placement;
+    if (placement != null) {
+      if (getValue(_state, placement.cell) != placement.digit) {
+        inputDigit(
+          placement.cell,
+          placement.digit,
+          autoRemoveNotes: autoRemoveNotes,
+        );
+      }
+      return;
+    }
+
+    final values = _state.grid.values;
+    final prevNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
+    final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
+    for (final i in step.restoreNotes) {
+      newNotes[i] = possibleCandidates(values, i);
+    }
+    step.eliminations.forEach((i, digits) {
+      if (values[i] != 0) return;
+      if (newNotes[i].isEmpty) newNotes[i] = possibleCandidates(values, i);
+      newNotes[i].removeAll(digits);
+    });
+    _state = _state.copyWith(
+      notes: newNotes,
+      history: [..._state.history, AutoNotesAction(previousNotes: prevNotes)],
+    );
   }
 
   Set<int> findErrors() {

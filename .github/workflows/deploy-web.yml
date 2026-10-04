@@ -1,9 +1,7 @@
 name: Deploy Flutter Web
 
+# Disabled in this fork, see fork-android.yml.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:

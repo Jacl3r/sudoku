@@ -1,16 +1,54 @@
 import 'package:material_ui/material_ui.dart';
 
+TextStyle _noteStyle(
+  ColorScheme scheme,
+  int digit, {
+  required double fontSize,
+  required Color color,
+  required Set<int> mark,
+  required Set<int> strike,
+}) {
+  if (strike.contains(digit)) {
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: .w700,
+      height: 1,
+      color: scheme.error,
+      decoration: TextDecoration.lineThrough,
+      decorationColor: scheme.error,
+    );
+  }
+  if (mark.contains(digit)) {
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: .w800,
+      height: 1,
+      color: scheme.primary,
+    );
+  }
+  return TextStyle(
+    fontSize: fontSize,
+    fontWeight: .w500,
+    height: 1,
+    color: color,
+  );
+}
+
 class NotesGrid extends StatelessWidget {
   const NotesGrid({
     required this.notes,
     required this.cellSize,
     super.key,
     this.hasNoteOfSameDigit = false,
+    this.mark = const {},
+    this.strike = const {},
   });
 
   final Set<int> notes;
   final double cellSize;
   final bool hasNoteOfSameDigit;
+  final Set<int> mark;
+  final Set<int> strike;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +60,21 @@ class NotesGrid extends StatelessWidget {
     final digits = notes.toList()..sort();
     final (top, middle, bottom) = _splitRows(digits);
 
+    TextStyle style(int d) => _noteStyle(
+      scheme,
+      d,
+      fontSize: fontSize,
+      color: color,
+      mark: mark,
+      strike: strike,
+    );
+
     return Column(
       mainAxisAlignment: .spaceAround,
       children: [
-        _NotesRow(digits: top, fontSize: fontSize, color: color),
-        _NotesRow(digits: middle, fontSize: fontSize, color: color),
-        _NotesRow(digits: bottom, fontSize: fontSize, color: color),
+        _NotesRow(digits: top, style: style),
+        _NotesRow(digits: middle, style: style),
+        _NotesRow(digits: bottom, style: style),
       ],
     );
   }
@@ -53,15 +100,10 @@ class NotesGrid extends StatelessWidget {
 }
 
 class _NotesRow extends StatelessWidget {
-  const _NotesRow({
-    required this.digits,
-    required this.fontSize,
-    required this.color,
-  });
+  const _NotesRow({required this.digits, required this.style});
 
   final List<int> digits;
-  final double fontSize;
-  final Color color;
+  final TextStyle Function(int digit) style;
 
   @override
   Widget build(BuildContext context) {
@@ -72,15 +114,7 @@ class _NotesRow extends StatelessWidget {
         for (final digit in digits)
           Padding(
             padding: const .symmetric(horizontal: 1),
-            child: Text(
-              '$digit',
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: .w500,
-                height: 1,
-                color: color,
-              ),
-            ),
+            child: Text('$digit', style: style(digit)),
           ),
       ],
     );
@@ -93,11 +127,15 @@ class FixedNotesGrid extends StatelessWidget {
     required this.cellSize,
     super.key,
     this.hasNoteOfSameDigit = false,
+    this.mark = const {},
+    this.strike = const {},
   });
 
   final Set<int> notes;
   final double cellSize;
   final bool hasNoteOfSameDigit;
+  final Set<int> mark;
+  final Set<int> strike;
 
   @override
   Widget build(BuildContext context) {
@@ -124,11 +162,13 @@ class FixedNotesGrid extends StatelessWidget {
           child: hasDigit
               ? Text(
                   '$digit',
-                  style: TextStyle(
+                  style: _noteStyle(
+                    cs,
+                    digit,
                     fontSize: fontSize,
-                    fontWeight: .w500,
-                    height: 1,
                     color: color,
+                    mark: mark,
+                    strike: strike,
                   ),
                 )
               : const SizedBox.shrink(),

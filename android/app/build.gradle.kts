@@ -26,7 +26,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.likhithpraveenk.sudoku"
+        // Own id so the fork installs next to the F-Droid version.
+        applicationId = "com.jacl3r.sudoku"
         minSdk = 24
         targetSdk = 37
         versionCode = flutter.versionCode
