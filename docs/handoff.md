@@ -75,7 +75,9 @@ Two PRDs, eleven slices, all implemented:
 
 Current numbers: **154 tests**, `flutter analyze` clean, web build green.
 
-Nothing is committed. `AGENTS.md` is staged; everything else is unstaged or untracked.
+Everything is committed and pushed to `origin/coach-and-export` as **`564663b`** (53 files,
++4090/−317). The fork's `main` is untouched at `403bbfc`. One commit on purpose: the slice
+docs carry the history, and the tree was tested as a whole.
 
 ## Pick up here next session
 
@@ -93,8 +95,10 @@ Nothing is committed. `AGENTS.md` is staged; everything else is unstaged or untr
    - Dead `PuzzleImportService.sharePuzzle` and its test.
    - Board semantics for screen readers (large, visual-first app today).
    - If 2× text feels cramped, cap the coach bar's growth before shrinking the grid further.
-4. **Committing.** Nothing has been committed on purpose. When ready, one commit on
-   `coach-and-export` covering the turned-down uncommitted changes; do not push to `main`.
+4. **Committing from here on.** Commit per slice or per session on `coach-and-export` and
+   push to `origin`, which is your fork. Never push to `main` and never create a `v*` tag:
+   `fork-android.yml` publishes a signed release on tags. A branch push only runs analyze
+   and tests.
 
 ## Gotchas worth remembering
 
