@@ -22,7 +22,7 @@ enum ExportFormat {
   grid('Grid', 'Readable 9x9 text grid.'),
   pencilmarks(
     'Pencilmarks',
-    'Grid with every candidate. Works with HoDoKu and similar solvers.',
+    'Readable 9x9 grid with every candidate written in.',
   ),
   link('Link', 'Opens the board in the SudokuWiki solver.');
 
@@ -36,31 +36,42 @@ class PuzzleExport {
     required this.values,
     required this.givens,
     required this.notes,
+    this.eliminations = const [],
   });
 
   factory PuzzleExport.fromState(GameState state) => PuzzleExport(
     values: state.grid.values,
     givens: state.puzzle.given.values,
     notes: state.notes,
+    eliminations: [
+      for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
+    ],
   );
 
   final List<int> values;
   final List<int> givens;
   final List<Set<int>> notes;
 
+  /// Candidates the coach has ruled out and the player applied.
+  final List<Set<int>> eliminations;
+
+  Set<int> _eliminationsAt(int index) =>
+      index < eliminations.length ? eliminations[index] : const {};
+
   /// Digits that are visible for the chosen content.
   List<int> digitsFor(ExportContent content) =>
       content == ExportContent.givens ? givens : values;
 
-  /// Candidates per cell: the player's notes, otherwise everything possible.
+  /// Candidates per cell: the player's notes, otherwise everything possible,
+  /// minus the eliminations already applied.
   List<Set<int>> candidates() => [
     for (var i = 0; i < 81; i++)
       if (values[i] != 0)
         <int>{}
       else if (notes[i].isNotEmpty)
-        Set<int>.from(notes[i])
+        notes[i].difference(_eliminationsAt(i))
       else
-        possibleCandidates(values, i),
+        possibleCandidates(values, i)..removeAll(_eliminationsAt(i)),
   ];
 
   String build({
@@ -151,14 +162,6 @@ class PuzzleExport {
     required ExportFormat format,
     required String body,
   }) {
-    final state = switch (content) {
-      ExportContent.givens => 'Here is the starting position.',
-      ExportContent.progress =>
-        'Here is my current position (starting digits plus my own).',
-      ExportContent.notes =>
-        'Here is my current position with my candidates. Cells I have not '
-            'noted show every digit that is still possible.',
-    };
     final notation = switch (format) {
       ExportFormat.line =>
         'Format: 81 characters, row by row, "." is an empty cell.',
@@ -168,6 +171,27 @@ class PuzzleExport {
       ExportFormat.link =>
         'The board is encoded in this SudokuWiki link (81 digits, 0 = empty).',
     };
+
+    if (!digitsFor(content).contains(0)) {
+      return [
+        'Here is a completed classic 9x9 Sudoku board. '
+            'Please check that it is a valid solution.',
+        '',
+        notation,
+        '',
+        body,
+      ].join('\n');
+    }
+
+    final state = switch (content) {
+      ExportContent.givens => 'Here is the starting position.',
+      ExportContent.progress =>
+        'Here is my current position (starting digits plus my own).',
+      ExportContent.notes =>
+        'Here is my current position with my candidates. Cells I have not '
+            'noted show every digit that is still possible.',
+    };
+
     return [
       'I am solving a classic 9x9 Sudoku and I am stuck. '
           'Please do not give me the solution.',

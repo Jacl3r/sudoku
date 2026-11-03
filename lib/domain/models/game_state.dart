@@ -15,6 +15,7 @@ class GameState {
     this.puzzleComplete = false,
     this.elapsed = Duration.zero,
     this.assists = const GameAssists(),
+    this.coachEliminations = const [],
   });
 
   final Puzzle puzzle;
@@ -26,6 +27,16 @@ class GameState {
   final Duration elapsed;
   final GameAssists assists;
 
+  /// Candidates the coach has ruled out and the player applied, cell by cell.
+  /// These survive a restart and are undone together with the step that made
+  /// them. Reasoning reads this; [notes] is display only.
+  final List<Set<int>> coachEliminations;
+
+  /// Eliminations recorded for [index]. Empty when there are none, and also when
+  /// the state was built without a ledger (older saves, hand-built state).
+  Set<int> coachEliminationsAt(int index) =>
+      index < coachEliminations.length ? coachEliminations[index] : const {};
+
   factory GameState.newGame({
     required Puzzle puzzle,
     required Difficulty difficulty,
@@ -35,6 +46,7 @@ class GameState {
     grid: puzzle.given.clone(),
     notes: List.generate(81, (_) => {}),
     history: const [],
+    coachEliminations: List.generate(81, (_) => {}),
   );
 
   GameState copyWith({
@@ -46,6 +58,7 @@ class GameState {
     bool? puzzleComplete,
     Duration? elapsed,
     GameAssists? assists,
+    List<Set<int>>? coachEliminations,
   }) => GameState(
     puzzle: puzzle ?? this.puzzle,
     difficulty: difficulty ?? this.difficulty,
@@ -55,6 +68,7 @@ class GameState {
     puzzleComplete: puzzleComplete ?? this.puzzleComplete,
     elapsed: elapsed ?? this.elapsed,
     assists: assists ?? this.assists,
+    coachEliminations: coachEliminations ?? this.coachEliminations,
   );
 
   @override
@@ -63,6 +77,7 @@ class GameState {
     difficulty,
     grid,
     Object.hashAll(notes.expand((s) => s)),
+    Object.hashAll(coachEliminations.expand((s) => s)),
     Object.hashAll(history),
     puzzleComplete,
     elapsed,
@@ -77,6 +92,7 @@ class GameState {
           difficulty == other.difficulty &&
           grid == other.grid &&
           listEquals(notes, other.notes) &&
+          listEquals(coachEliminations, other.coachEliminations) &&
           listEquals(history, other.history) &&
           puzzleComplete == other.puzzleComplete &&
           elapsed == other.elapsed &&
@@ -93,6 +109,11 @@ class GameState {
     final notes = (json['notes'] as List)
         .map((e) => Set<int>.from(e as List))
         .toList();
+    final eliminations =
+        (json['coachEliminations'] as List?)
+            ?.map((e) => Set<int>.from(e as List))
+            .toList() ??
+        List<Set<int>>.generate(81, (_) => {});
     final assistsMap = Map<String, dynamic>.from(json['assists'] as Map);
 
     return GameState(
@@ -101,6 +122,7 @@ class GameState {
       puzzle: Puzzle(given: given, solution: solution),
       grid: grid,
       notes: notes,
+      coachEliminations: eliminations,
       history: const [],
       assists: GameAssists(
         hints: assistsMap['hints'] as bool,
@@ -117,6 +139,7 @@ class GameState {
     'solutionValues': puzzle.solution.values,
     'givenValues': puzzle.given.values,
     'notes': notes.map((s) => s.toList()).toList(),
+    'coachEliminations': coachEliminations.map((s) => s.toList()).toList(),
     'assists': {
       'hints': assists.hints,
       'autoNotes': assists.autoNotes,

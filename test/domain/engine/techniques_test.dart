@@ -116,5 +116,30 @@ void main() {
         expect(hints.first.isPlacement(), isFalse);
       });
     });
+
+    group('TurbotFish', () {
+      test('never targets a cell that is part of the pattern', () {
+        // Digit 5 fits only in R1C1, R1C2, R2C1 and R2C3. Rows 1 and 2 share
+        // column 1, so the tips are R1C2 and R2C3. R1C1 and R2C1 form the base
+        // and they see both tips, so neither may be eliminated.
+        final candidates = List<int>.filled(81, 0x1FF);
+        for (var i = 0; i < 81; i++) {
+          candidates[i] &= ~(1 << 4);
+        }
+        for (final i in [0, 1, 9, 11]) {
+          candidates[i] |= 1 << 4;
+        }
+        final grid = SudokuGrid(
+          values: List<int>.filled(81, 0),
+          candidates: candidates,
+        );
+
+        expect(
+          TurbotFish().getHints(grid),
+          isEmpty,
+          reason: 'the only cells seeing both tips are pattern cells',
+        );
+      });
+    });
   });
 }

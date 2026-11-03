@@ -102,6 +102,10 @@ class DigitButton extends StatelessWidget {
       child: InkWell(
         mouseCursor: SystemMouseCursors.click,
         borderRadius: .circular(6),
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
         onTap: onTap,
         child: Stack(
           fit: StackFit.passthrough,

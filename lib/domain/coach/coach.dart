@@ -6,11 +6,15 @@ import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/domain/models/hint.dart';
 import 'package:sudoku/domain/models/sudoku_grid.dart';
 
-/// Finds the next step for the current game, based on what the player
-/// actually has on the board (digits and their own notes).
+/// Finds the next step for the current game, based on the placed digits and the
+/// eliminations the player has already applied. The player's notes are display
+/// only and never feed the reasoning.
 CoachStep? nextCoachStep(GameState state) => findCoachStep(
   values: state.grid.values,
   notes: state.notes,
+  eliminations: [
+    for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
+  ],
   solution: state.puzzle.solution.values,
   givens: state.puzzle.given.values,
 );
@@ -18,13 +22,14 @@ CoachStep? nextCoachStep(GameState state) => findCoachStep(
 CoachStep? findCoachStep({
   required List<int> values,
   required List<Set<int>> notes,
+  required List<Set<int>> eliminations,
   required List<int> solution,
   required List<int> givens,
 }) {
   final mistake = _findMistake(values, notes, solution, givens);
   if (mistake != null) return mistake;
 
-  final board = CoachBoard.fromPlayer(values, notes);
+  final board = CoachBoard.fromState(values, eliminations);
   for (final detector in _detectors) {
     final step = detector(board);
     if (step != null) return step;
@@ -42,20 +47,21 @@ Set<int> possibleCandidates(List<int> values, int index) {
   return {1, 2, 3, 4, 5, 6, 7, 8, 9}..removeAll(used);
 }
 
-/// Candidates the coach reasons with: the player's notes where they have
-/// some, otherwise everything that is still possible.
+/// Candidates the coach reasons with: everything still possible from the placed
+/// digits, minus eliminations already applied. Player notes deliberately play no
+/// part, because partial notes would make the deduction unsound.
 class CoachBoard {
   CoachBoard(this.values, this.masks);
 
-  factory CoachBoard.fromPlayer(List<int> values, List<Set<int>> notes) {
+  factory CoachBoard.fromState(
+    List<int> values,
+    List<Set<int>> eliminations,
+  ) {
     final masks = List<int>.filled(81, 0);
     for (var i = 0; i < 81; i++) {
       if (values[i] != 0) continue;
-      var cands = possibleCandidates(values, i);
-      if (notes[i].isNotEmpty) {
-        final narrowed = cands.intersection(notes[i]);
-        if (narrowed.isNotEmpty) cands = narrowed;
-      }
+      final cands = possibleCandidates(values, i);
+      if (i < eliminations.length) cands.removeAll(eliminations[i]);
       for (final d in cands) {
         masks[i] |= 1 << (d - 1);
       }
@@ -92,6 +98,10 @@ CoachStep? detectSkyscraper(CoachBoard b) => _skyscraper(b);
 
 @visibleForTesting
 CoachStep? detectTwoStringKite(CoachBoard b) => _twoStringKite(b);
+
+/// The detectors in priority order, for tests that check every technique.
+@visibleForTesting
+List<CoachStep? Function(CoachBoard)> get coachDetectors => _detectors;
 
 typedef _Detector = CoachStep? Function(CoachBoard b);
 
@@ -440,7 +450,8 @@ CoachStep? _fish(CoachBoard b, int n) {
         if (cover.length != n) continue;
         final pattern = <int>{
           for (final l in combo)
-            for (final x in lines[l]!) byRow ? l * 9 + x : x * 9 + l,
+            for (final x in lines[l]!)
+              if (byRow) l * 9 + x else x * 9 + l,
         };
         final targets = <int>[
           for (final x in cover)
@@ -690,8 +701,8 @@ CoachStep? _fallback(CoachBoard b) {
   final extra = <String, SudokuTechnique>{
     'Simple Coloring': SimpleColoring(),
     'Naked Quad': NakedQuad(),
-    'Hidden Quad': HiddenQuad(),
     'Jellyfish': Jellyfish(),
+    'Hidden Quad': HiddenQuad(),
   };
   for (final entry in extra.entries) {
     final hints = entry.value.getHints(grid);

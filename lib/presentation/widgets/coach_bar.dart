@@ -1,10 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:sudoku/domain/export/puzzle_export.dart';
+import 'package:sudoku/presentation/widgets/export_sheet.dart';
 import 'package:sudoku/providers/coach_provider.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 
-/// Height the coach bar takes, so the grid can make room for it.
+/// Height the coach bar takes at the default text scale.
 const double kCoachBarHeight = 132;
+
+/// The bar grows with the text scale instead of clipping large fonts. Callers
+/// that reserve space for it must use the same value.
+double coachBarHeight(BuildContext context) {
+  final scale = MediaQuery.textScalerOf(context).scale(1);
+  return kCoachBarHeight + (scale - 1).clamp(0.0, 1.0) * 48;
+}
 
 /// Small panel under the grid that reveals a hint step by step.
 class CoachBar extends ConsumerWidget {
@@ -35,12 +44,34 @@ class CoachBar extends ConsumerWidget {
       body =
           'Nothing the coach knows works here. This position needs '
           'something like chains.';
-      action = FilledButton(
-        onPressed: () {
-          notifier.close();
-          game.hint();
-        },
-        child: const Text('Reveal a cell'),
+      action = Row(
+        mainAxisSize: .min,
+        spacing: 8,
+        children: [
+          TextButton(
+            onPressed: () {
+              notifier.close();
+              game.hint();
+            },
+            child: const Text('Reveal a cell'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final current = ref.read(gameProvider).value;
+              notifier.close();
+              if (current != null) {
+                showExportSheet(
+                  context,
+                  current,
+                  content: ExportContent.notes,
+                  format: ExportFormat.pencilmarks,
+                  withPrompt: true,
+                );
+              }
+            },
+            child: const Text('Ask AI for a nudge'),
+          ),
+        ],
       );
     } else {
       title = step.technique;
@@ -76,12 +107,10 @@ class CoachBar extends ConsumerWidget {
     return Padding(
       padding: const .symmetric(horizontal: 8),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 520,
-          minHeight: kCoachBarHeight,
-          maxHeight: kCoachBarHeight,
-        ),
-        child: DecoratedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: SizedBox(
+          height: coachBarHeight(context),
+          child: DecoratedBox(
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHigh,
             borderRadius: .circular(6),
@@ -137,6 +166,7 @@ class CoachBar extends ConsumerWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

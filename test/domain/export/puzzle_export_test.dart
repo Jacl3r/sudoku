@@ -56,6 +56,44 @@ void main() {
       expect(text.split('bd=').last.length, 81);
     });
 
+    test('recorded eliminations are removed from candidates', () {
+      final eliminations = List<Set<int>>.generate(81, (_) => <int>{});
+      eliminations[2] = {1};
+      eliminations[3] = {1};
+      final withLedger = PuzzleExport(
+        values: values,
+        givens: givens,
+        notes: notes,
+        eliminations: eliminations,
+      );
+
+      // A noted cell loses the eliminated digit.
+      expect(withLedger.candidates()[2], {2});
+      // A cell without notes loses it from the full candidate set.
+      expect(export.candidates()[3], contains(1));
+      expect(withLedger.candidates()[3], isNot(contains(1)));
+    });
+
+    test('a completed board gets a completion prompt', () {
+      final solved = List<int>.generate(
+        81,
+        (i) => ((i ~/ 9 + i % 9) % 9) + 1,
+      );
+      final done = PuzzleExport(
+        values: solved,
+        givens: solved,
+        notes: List<Set<int>>.generate(81, (_) => <int>{}),
+      );
+      final text = done.build(
+        content: ExportContent.progress,
+        format: ExportFormat.line,
+        withPrompt: true,
+      );
+      expect(text, startsWith('Here is a completed'));
+      expect(text, isNot(contains('stuck')));
+      expect(text, contains(solved.join()));
+    });
+
     test('prompt wraps the board and asks for no solution', () {
       final text = export.build(
         content: ExportContent.notes,

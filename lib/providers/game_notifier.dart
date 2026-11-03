@@ -5,6 +5,7 @@ import 'package:sudoku/domain/coach/coach_step.dart';
 import 'package:sudoku/domain/engine/game_engine.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
+import 'package:sudoku/domain/models/imported_game.dart';
 import 'package:sudoku/domain/models/stat_record.dart';
 import 'package:sudoku/presentation/models/board_state.dart';
 import 'package:sudoku/providers/board_notifier.dart';
@@ -28,6 +29,20 @@ final isFinishedProvider = Provider.autoDispose((ref) {
 
 const kTick = Duration(seconds: 1);
 
+/// Where the running game is saved: a difficulty name or an `import:<id>` key.
+/// Whoever opens the game screen sets it; it is cleared when the screen goes.
+final activeSaveKeyProvider = NotifierProvider<ActiveSaveKeyNotifier, String?>(
+  ActiveSaveKeyNotifier.new,
+  name: 'activeSaveKeyProvider',
+);
+
+class ActiveSaveKeyNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? key) => state = key;
+}
+
 class GameNotifier extends AsyncNotifier<GameState?> {
   GameEngine? _gameEngine;
   Timer? _timer;
@@ -37,6 +52,17 @@ class GameNotifier extends AsyncNotifier<GameState?> {
   @override
   Future<GameState?> build() async {
     final saveGameService = ref.read(saveGameServiceProvider);
+    final difficulty = ref.read(difficultyProvider);
+
+    var key = ref.read(activeSaveKeyProvider) ?? difficulty.name;
+    var saved = saveGameService.loadKey(key);
+    // An import whose state vanished falls back to a fresh difficulty game
+    // rather than resurrecting the import key.
+    if (saved == null && isImportKey(key)) {
+      key = difficulty.name;
+      saved = saveGameService.loadKey(key);
+    }
+
     ref.onDispose(() {
       _disposed = true;
       _timer?.cancel();
@@ -44,15 +70,13 @@ class GameNotifier extends AsyncNotifier<GameState?> {
       if (engine != null) {
         final current = engine.currentState;
         if (current.puzzleComplete) {
-          saveGameService.delete(current.difficulty);
+          unawaited(saveGameService.deleteKey(key));
         } else {
-          saveGameService.save(current);
+          unawaited(saveGameService.save(current, key: key));
         }
       }
     });
 
-    final difficulty = ref.read(difficultyProvider);
-    final saved = saveGameService.load(difficulty);
     final initialState = saved ?? await _generateNew(difficulty);
 
     _gameEngine = GameEngine(initialState);

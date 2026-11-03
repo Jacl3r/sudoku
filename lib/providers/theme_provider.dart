@@ -14,6 +14,27 @@ final themeConfigProvider = NotifierProvider(
   name: 'themeConfigProvider',
 );
 
+/// Whether the first-run theme sheet has been shown.
+final themeOnboardingSeenProvider =
+    NotifierProvider<ThemeOnboardingNotifier, bool>(
+      ThemeOnboardingNotifier.new,
+      name: 'themeOnboardingSeenProvider',
+    );
+
+class ThemeOnboardingNotifier extends Notifier<bool> {
+  static const _key = 'theme_onboarding_seen';
+
+  Box<String> get _box => Hive.box(settingsBox);
+
+  @override
+  bool build() => _box.get(_key) == 'true';
+
+  Future<void> markSeen() async {
+    state = true;
+    await _box.put(_key, 'true');
+  }
+}
+
 final kShape = RoundedRectangleBorder(borderRadius: .circular(6));
 
 final customThemeProvider = NotifierProvider(

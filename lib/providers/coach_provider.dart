@@ -44,13 +44,18 @@ class CoachState {
   );
 }
 
-/// Identifies the board content, ignoring the timer.
+/// Identifies the board content the coach reasons from, ignoring the timer and
+/// the player's notes.
 String coachBoardKey(GameState s) {
-  final buffer = StringBuffer(s.grid.values.join());
-  for (final n in s.notes) {
+  final buffer = StringBuffer(s.grid.values.join('|'));
+  for (var i = 0; i < 81; i++) {
+    final eliminations = s.coachEliminationsAt(i);
+    if (eliminations.isEmpty) continue;
     buffer
-      ..write('|')
-      ..write((n.toList()..sort()).join());
+      ..write('#')
+      ..write(i)
+      ..write(':')
+      ..write((eliminations.toList()..sort()).join());
   }
   return buffer.toString();
 }
@@ -81,7 +86,10 @@ class CoachNotifier extends Notifier<CoachState?> {
     final step = nextCoachStep(game);
     final marks = <int, Set<int>>{};
     if (step != null) {
-      final board = CoachBoard.fromPlayer(game.grid.values, game.notes);
+      final board = CoachBoard.fromState(
+        game.grid.values,
+        [for (var i = 0; i < 81; i++) game.coachEliminationsAt(i)],
+      );
       for (final cell in step.patternCells) {
         if (board.values[cell] != 0) continue;
         final digits = step.patternDigits

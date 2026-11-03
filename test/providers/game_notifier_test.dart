@@ -29,6 +29,14 @@ class FakeSettingsNotifier extends SettingsNotifier {
   AppSettings build() => _settings;
 }
 
+class _FakeActiveKey extends ActiveSaveKeyNotifier {
+  _FakeActiveKey(this._value);
+  final String? _value;
+
+  @override
+  String? build() => _value;
+}
+
 class MockPuzzleGeneratorService implements PuzzleGeneratorService {
   int generateCalls = 0;
 
@@ -108,6 +116,9 @@ void main() {
               () => FakeSettingsNotifier(const AppSettings()),
             ),
             saveGameServiceProvider.overrideWithValue(service),
+            difficultyProvider.overrideWith(
+              () => FakeDifficultyNotifier(Difficulty.easy),
+            ),
           ],
         );
 
@@ -116,6 +127,45 @@ void main() {
         expect(readState(container).elapsed, const Duration(minutes: 3));
       },
     );
+
+    test('a game opened from an import saves back to the import', () async {
+      const key = 'import:1';
+      final importedState = GameState.newGame(
+        puzzle: Puzzle(
+          given: TestGrids.simplePuzzle(),
+          solution: TestGrids.simpleSolution(),
+        ),
+        difficulty: Difficulty.hard,
+      ).copyWith(elapsed: const Duration(minutes: 5));
+
+      final service = FakeSaveGameService();
+      await service.save(importedState, key: key);
+
+      container = ProviderContainer(
+        overrides: [
+          puzzleGeneratorServiceProvider.overrideWithValue(
+            MockPuzzleGeneratorService(),
+          ),
+          settingsProvider.overrideWith(
+            () => FakeSettingsNotifier(const AppSettings()),
+          ),
+          saveGameServiceProvider.overrideWithValue(service),
+          difficultyProvider.overrideWith(
+            () => FakeDifficultyNotifier(Difficulty.hard),
+          ),
+          activeSaveKeyProvider.overrideWith(() => _FakeActiveKey(key)),
+        ],
+      );
+
+      await pumpGame(container);
+      expect(readState(container).elapsed, const Duration(minutes: 5));
+
+      // Disposing saves back under the import key, not the difficulty slot.
+      container.dispose();
+      container = ProviderContainer();
+      expect(service.loadKey(key)!.elapsed, const Duration(minutes: 5));
+      expect(service.load(Difficulty.hard), isNull);
+    });
 
     test('generates new game when no saved game for difficulty', () async {
       await pumpGame(container);

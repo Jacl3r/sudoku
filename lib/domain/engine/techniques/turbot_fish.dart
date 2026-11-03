@@ -41,9 +41,17 @@ class TurbotFish implements SudokuTechnique {
 
             final tip1 = r1 * 9 + tipCol1;
             final tip2 = r2 * 9 + tipCol2;
+            // A pattern cell can see both tips; eliminating the digit from one
+            // of them is not a valid deduction.
+            final pattern = {
+              r1 * 9 + baseCol,
+              r2 * 9 + baseCol,
+              tip1,
+              tip2,
+            };
 
             for (var target = 0; target < 81; target++) {
-              if (target == tip1 || target == tip2) continue;
+              if (pattern.contains(target)) continue;
               if (grid.valueAt(target) != 0) continue;
               if (kGridPeerSets[tip1].contains(target) &&
                   kGridPeerSets[tip2].contains(target) &&
@@ -87,9 +95,17 @@ class TurbotFish implements SudokuTechnique {
 
             final tip1 = tipRow1 * 9 + c1;
             final tip2 = tipRow2 * 9 + c2;
+            // A pattern cell can see both tips; eliminating the digit from one
+            // of them is not a valid deduction.
+            final pattern = {
+              baseRow * 9 + c1,
+              baseRow * 9 + c2,
+              tip1,
+              tip2,
+            };
 
             for (var target = 0; target < 81; target++) {
-              if (target == tip1 || target == tip2) continue;
+              if (pattern.contains(target)) continue;
               if (grid.valueAt(target) != 0) continue;
               if (kGridPeerSets[tip1].contains(target) &&
                   kGridPeerSets[tip2].contains(target) &&

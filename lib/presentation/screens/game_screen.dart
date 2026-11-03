@@ -131,7 +131,7 @@ class GameScreen extends ConsumerWidget {
                     Row(
                       mainAxisSize: .min,
                       children: [
-                        if (game != null && !game.puzzleComplete)
+                        if (game != null)
                           IconButton(
                             tooltip: 'Export',
                             onPressed: () {
@@ -183,7 +183,8 @@ class _GameBodyState extends ConsumerState<_GameBody>
     if (state == .paused || state == .detached || state == .hidden) {
       final current = ref.read(gameProvider).value;
       if (current != null) {
-        ref.read(saveGameServiceProvider).save(current);
+        final key = ref.read(activeSaveKeyProvider) ?? current.difficulty.name;
+        ref.read(saveGameServiceProvider).save(current, key: key);
       }
     }
   }
@@ -206,7 +207,9 @@ class _GameBodyState extends ConsumerState<_GameBody>
 
     final grid = GridWidget(
       gameState: widget.state,
-      reservedHeight: coachActive && isPortrait ? kCoachBarHeight + 16 : 0,
+      reservedHeight: coachActive && isPortrait
+          ? coachBarHeight(context) + 16
+          : 0,
     );
     const action = ActionRow();
     final digits = DigitPad(state: widget.state);

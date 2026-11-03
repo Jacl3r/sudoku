@@ -54,12 +54,18 @@ class GameEngine {
       previousValue: currentValue,
       newValue: digit,
       previousNotes: previousNotes,
+      previousCoachEliminations: _eliminations(),
     );
 
     final grid = _state.grid.clone()..setValue(cellIndex, digit);
     _state = _state.copyWith(
       grid: grid,
       notes: newNotes,
+      // Replacing a digit widens the candidate set of its peers, so recorded
+      // deductions may no longer hold.
+      coachEliminations: currentValue == 0
+          ? null
+          : List<Set<int>>.generate(81, (_) => {}),
       history: [..._state.history, action],
     );
 
@@ -84,6 +90,7 @@ class GameEngine {
       previousNotes: Set<int>.from(_state.notes[cellIndex]),
       newNotes: Set<int>.from(updated),
       previousValue: previousValue,
+      previousCoachEliminations: _eliminations(),
     );
 
     final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
@@ -92,6 +99,10 @@ class GameEngine {
     _state = _state.copyWith(
       grid: grid,
       notes: newNotes,
+      // Turning a digit into a note removes it from the grid.
+      coachEliminations: previousValue == 0
+          ? null
+          : List<Set<int>>.generate(81, (_) => {}),
       history: [..._state.history, action],
     );
   }
@@ -107,6 +118,7 @@ class GameEngine {
       cellIndex: cellIndex,
       previousValue: previousValue,
       previousNotes: previousNotes,
+      previousCoachEliminations: _eliminations(),
     );
 
     final grid = _state.grid.clone()..clearValue(cellIndex);
@@ -116,6 +128,11 @@ class GameEngine {
     _state = _state.copyWith(
       grid: grid,
       notes: newNotes,
+      // Removing a digit widens the candidate set, so deductions recorded against
+      // the old one can no longer be trusted.
+      coachEliminations: previousValue == 0
+          ? null
+          : List<Set<int>>.generate(81, (_) => {}),
       history: [..._state.history, action],
     );
   }
@@ -133,19 +150,48 @@ class GameEngine {
         });
         final grid = _state.grid.clone()
           ..setValue(action.cellIndex, action.previousValue);
-        _state = _state.copyWith(grid: grid, notes: newNotes, history: trimmed);
+        _state = _state.copyWith(
+          grid: grid,
+          notes: newNotes,
+          coachEliminations: _copyEliminations(
+            action.previousCoachEliminations,
+          ),
+          history: trimmed,
+        );
       case PencilAction():
         final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
         newNotes[action.cellIndex] = Set<int>.from(action.previousNotes);
         final grid = _state.grid.clone()
           ..setValue(action.cellIndex, action.previousValue);
-        _state = _state.copyWith(grid: grid, notes: newNotes, history: trimmed);
+        _state = _state.copyWith(
+          grid: grid,
+          notes: newNotes,
+          coachEliminations: _copyEliminations(
+            action.previousCoachEliminations,
+          ),
+          history: trimmed,
+        );
       case EraseAction():
         final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
         newNotes[action.cellIndex] = Set<int>.from(action.previousNotes);
         final grid = _state.grid.clone()
           ..setValue(action.cellIndex, action.previousValue);
-        _state = _state.copyWith(grid: grid, notes: newNotes, history: trimmed);
+        _state = _state.copyWith(
+          grid: grid,
+          notes: newNotes,
+          coachEliminations: _copyEliminations(
+            action.previousCoachEliminations,
+          ),
+          history: trimmed,
+        );
+      case CoachNotesAction():
+        _state = _state.copyWith(
+          notes: action.previousNotes.map(Set<int>.from).toList(),
+          coachEliminations: _copyEliminations(
+            action.previousCoachEliminations,
+          ),
+          history: trimmed,
+        );
       case AutoNotesAction():
         _state = _state.copyWith(
           notes: action.previousNotes.map(Set<int>.from).toList(),
@@ -191,19 +237,58 @@ class GameEngine {
 
     final values = _state.grid.values;
     final prevNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
+    final prevEliminations = _eliminations();
     final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
+    final newEliminations = _eliminations();
+
     for (final i in step.restoreNotes) {
       newNotes[i] = possibleCandidates(values, i);
+      newEliminations[i] = {};
     }
+
     step.eliminations.forEach((i, digits) {
       if (values[i] != 0) return;
-      if (newNotes[i].isEmpty) newNotes[i] = possibleCandidates(values, i);
-      newNotes[i].removeAll(digits);
+      newEliminations[i].addAll(digits);
+      // Never invent notes: only cells the player already wrote in change.
+      if (newNotes[i].isNotEmpty) newNotes[i].removeAll(digits);
     });
+
+    if (_sameNotes(newNotes, _state.notes) &&
+        _sameNotes(newEliminations, prevEliminations)) {
+      return;
+    }
+
     _state = _state.copyWith(
       notes: newNotes,
-      history: [..._state.history, AutoNotesAction(previousNotes: prevNotes)],
+      coachEliminations: newEliminations,
+      history: [
+        ..._state.history,
+        CoachNotesAction(
+          previousNotes: prevNotes,
+          previousCoachEliminations: prevEliminations,
+        ),
+      ],
     );
+  }
+
+  List<Set<int>> _eliminations() => List<Set<int>>.generate(
+    81,
+    (i) => Set<int>.from(_state.coachEliminationsAt(i)),
+  );
+
+  static List<Set<int>> _copyEliminations(List<Set<int>> source) =>
+      List<Set<int>>.generate(
+        81,
+        (i) => i < source.length ? Set<int>.from(source[i]) : <int>{},
+      );
+
+  static bool _sameNotes(List<Set<int>> a, List<Set<int>> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].length != b[i].length) return false;
+      if (!a[i].containsAll(b[i])) return false;
+    }
+    return true;
   }
 
   Set<int> findErrors() {

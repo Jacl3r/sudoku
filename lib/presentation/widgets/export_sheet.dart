@@ -7,18 +7,40 @@ import 'package:sudoku/domain/export/puzzle_export.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/presentation/screens/about_screen.dart';
 
-Future<void> showExportSheet(BuildContext context, GameState state) {
+Future<void> showExportSheet(
+  BuildContext context,
+  GameState state, {
+  ExportContent? content,
+  ExportFormat? format,
+  bool? withPrompt,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => ExportSheet(state: state),
+    builder: (_) => ExportSheet(
+      state: state,
+      initialContent: content,
+      initialFormat: format,
+      initialPrompt: withPrompt,
+    ),
   );
 }
 
 class ExportSheet extends StatefulWidget {
-  const ExportSheet({required this.state, super.key});
+  const ExportSheet({
+    required this.state,
+    this.initialContent,
+    this.initialFormat,
+    this.initialPrompt,
+    super.key,
+  });
 
   final GameState state;
+
+  /// Overrides for the remembered choice, used by the coach's dead-end hand-off.
+  final ExportContent? initialContent;
+  final ExportFormat? initialFormat;
+  final bool? initialPrompt;
 
   @override
   State<ExportSheet> createState() => _ExportSheetState();
@@ -30,9 +52,9 @@ class _ExportSheetState extends State<ExportSheet> {
   static ExportFormat _lastFormat = ExportFormat.pencilmarks;
   static bool _lastPrompt = true;
 
-  late ExportContent content = _lastContent;
-  late ExportFormat format = _lastFormat;
-  late bool withPrompt = _lastPrompt;
+  late ExportContent content = widget.initialContent ?? _lastContent;
+  late ExportFormat format = widget.initialFormat ?? _lastFormat;
+  late bool withPrompt = widget.initialPrompt ?? _lastPrompt;
   bool copied = false;
   Timer? _copiedTimer;
 
@@ -53,9 +75,7 @@ class _ExportSheetState extends State<ExportSheet> {
     _lastPrompt = withPrompt;
   }
 
-  Future<void> _copy() async {
-    _remember();
-    await Clipboard.setData(ClipboardData(text: text));
+  void _flashCopied() {
     if (!mounted) return;
     setState(() => copied = true);
     _copiedTimer?.cancel();
@@ -64,12 +84,17 @@ class _ExportSheetState extends State<ExportSheet> {
     });
   }
 
+  Future<void> _copy() async {
+    _remember();
+    await Clipboard.setData(ClipboardData(text: text));
+    _flashCopied();
+  }
+
   Future<void> _share() async {
     _remember();
     final opened = await shareText(text);
-    if (!opened && mounted) {
-      setState(() => copied = true);
-    }
+    // `shareText` copies when there is no share sheet to open.
+    if (!opened) _flashCopied();
   }
 
   Future<void> _open() async {

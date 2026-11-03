@@ -5,6 +5,8 @@ import 'package:sudoku/domain/engine/game_utils.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/presentation/screens/game_screen.dart';
+import 'package:sudoku/providers/difficulty_provider.dart';
+import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 
 class ImportSudokuDialog extends ConsumerStatefulWidget {
@@ -24,6 +26,16 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  /// Any edit invalidates a puzzle that was already checked, so Start can never
+  /// run with text the player has since replaced.
+  void _invalidate() {
+    setState(() {
+      validPuzzle = null;
+      computedDifficulty = null;
+      errorText = null;
+    });
   }
 
   @override
@@ -51,6 +63,7 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
             TextFormField(
               controller: controller,
               maxLines: 4,
+              onChanged: (_) => _invalidate(),
               decoration: InputDecoration(
                 hintText:
                     'Paste 81-digit puzzle here. The gaps can be `0`, `.`, `x`, `X`, `_`',
@@ -71,11 +84,11 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
               child: OutlinedButton.icon(
                 onPressed: () async {
                   final file = await FilePicker.pickFile();
-                  if (file == null) return;
+                  if (file == null || !mounted) return;
                   final bytes = await file.readAsBytes();
-                  final raw = String.fromCharCodes(bytes);
-                  controller.text = raw;
-                  setState(() {});
+                  if (!mounted) return;
+                  controller.text = String.fromCharCodes(bytes);
+                  _invalidate();
                 },
                 icon: const Icon(Icons.folder_open_outlined),
                 label: const Text('Pick File'),
@@ -93,7 +106,13 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
         if (validPuzzle != null)
           FilledButton(
             onPressed: () async {
-              await ref.read(saveGameServiceProvider).save(validPuzzle!);
+              final imported = await ref
+                  .read(saveGameServiceProvider)
+                  .saveImport(validPuzzle!);
+              ref
+                  .read(difficultyProvider.notifier)
+                  .set(validPuzzle!.difficulty);
+              ref.read(activeSaveKeyProvider.notifier).set(imported.key);
               if (context.mounted) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute<void>(builder: (_) => const GameScreen()),
@@ -128,7 +147,7 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
               });
             }
           },
-          child: const Text('Import'),
+          child: const Text('Check'),
         ),
       ],
     );

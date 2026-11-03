@@ -80,11 +80,19 @@ class SudokuCell extends StatelessWidget {
         ? <int>{...notes, ...coach.mark, ...coach.strike}
         : notes;
 
-    final highlightColor = isError ? scheme.errorContainer : scheme.primary;
+    // Only the selected cell gets the full primary fill; a digit or note match
+    // gets a soft tint, so tapping a digit no longer floods the board.
+    final highlightColor = isError
+        ? scheme.errorContainer
+        : isSelected
+        ? scheme.primary
+        : isSameDigit || hasNoteOfSameDigit
+        ? Color.alphaBlend(scheme.primary.withValues(alpha: 0.18), baseColor)
+        : Colors.transparent;
 
     final foreground = isGiven && maskGivenCells
         ? scheme.surface
-        : (isSelected || isSameDigit ? scheme.surface : scheme.onSurface);
+        : (isSelected ? scheme.surface : scheme.onSurface);
 
     final isHighlighted =
         isError || isSelected || isSameDigit || hasNoteOfSameDigit;
@@ -99,9 +107,9 @@ class SudokuCell extends StatelessWidget {
       padding: const EdgeInsets.all(2),
       child: TweenAnimationBuilder<double>(
         duration: _animationDuration,
-        curve: isHighlighted ? Curves.easeOutBack : Curves.easeOutCubic,
+        curve: Curves.easeOut,
         tween: Tween(begin: 0, end: isHighlighted ? 1.0 : 0.0),
-        builder: (context, scale, child) {
+        builder: (context, opacity, child) {
           return Stack(
             alignment: .center,
             children: [
@@ -114,8 +122,8 @@ class SudokuCell extends StatelessWidget {
                       : Border.all(color: coachBorder, width: 1.5),
                 ),
               ),
-              Transform.scale(
-                scale: scale,
+              Opacity(
+                opacity: opacity.clamp(0, 1),
                 child: AnimatedContainer(
                   duration: _animationDuration,
                   curve: _animationCurve,

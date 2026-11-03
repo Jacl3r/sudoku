@@ -8,6 +8,7 @@ class DigitAction extends GameAction {
     required this.previousValue,
     required this.previousNotes,
     required this.newValue,
+    this.previousCoachEliminations = const [],
   });
 
   final int cellIndex;
@@ -17,6 +18,8 @@ class DigitAction extends GameAction {
   final Map<int, Set<int>> previousNotes;
 
   final int newValue;
+
+  final List<Set<int>> previousCoachEliminations;
 }
 
 class PencilAction extends GameAction {
@@ -25,6 +28,7 @@ class PencilAction extends GameAction {
     required this.previousNotes,
     required this.newNotes,
     required this.previousValue,
+    this.previousCoachEliminations = const [],
   });
 
   final int cellIndex;
@@ -34,6 +38,8 @@ class PencilAction extends GameAction {
   final Set<int> newNotes;
 
   final int previousValue;
+
+  final List<Set<int>> previousCoachEliminations;
 }
 
 class EraseAction extends GameAction {
@@ -41,6 +47,7 @@ class EraseAction extends GameAction {
     required this.cellIndex,
     required this.previousValue,
     required this.previousNotes,
+    this.previousCoachEliminations = const [],
   });
 
   final int cellIndex;
@@ -48,10 +55,24 @@ class EraseAction extends GameAction {
   final int previousValue;
 
   final Set<int> previousNotes;
+
+  final List<Set<int>> previousCoachEliminations;
 }
 
 class AutoNotesAction extends GameAction {
   const AutoNotesAction({required this.previousNotes});
 
   final List<Set<int>> previousNotes;
+}
+
+/// One undo step for a coach move that changes candidates in several cells.
+class CoachNotesAction extends GameAction {
+  const CoachNotesAction({
+    required this.previousNotes,
+    required this.previousCoachEliminations,
+  });
+
+  final List<Set<int>> previousNotes;
+
+  final List<Set<int>> previousCoachEliminations;
 }
