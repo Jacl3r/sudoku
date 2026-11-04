@@ -53,11 +53,16 @@ then on the phone.
   `~/.dart-tool`. Those directories exist now.
 - Web state is IndexedDB. To get a first-run experience again: DevTools → Application →
   Storage → Clear site data.
-- No Android SDK is installed yet, so nothing has run on a phone.
+- **Android toolchain is installed** (2026-11-04): Android Studio 2026.2.2 from Homebrew with
+  its bundled JDK 25, and the SDK at `/Users/jacler/Library/Android/sdk` with platform-tools
+  37.0.1, build-tools 37.0.0 and platform android-37.0. Gradle fetched NDK 28.2, build-tools
+  36 and platforms 35/36 on the first build. `flutter build apk --debug` succeeded and wrote
+  `build/app/outputs/flutter-apk/app-debug.apk`; the first run took about 12 minutes with
+  downloads. Nothing has run on the phone yet.
 
 ## Where things stand
 
-Two PRDs, eleven slices, all implemented:
+Two PRDs, fourteen slices, all implemented:
 
 | Slice | What it delivered |
 |---|---|
@@ -78,28 +83,33 @@ Two PRDs, eleven slices, all implemented:
 
 Current numbers: **158 tests**, `flutter analyze` clean, web build green.
 
+A separate **`multiplayer`** branch exists for a private browser-only co-op experiment (PRD
+`docs/prd/multiplayer.md`, slices 015–018 in `docs/plans/`). It never merges into this branch
+and is never released; this branch's app is unaffected by it. Nothing from it should be
+cherry-picked here.
+
 Slices 001–011 are committed and pushed to `origin/coach-and-export` as **`564663b`** (53
-files, +4090/−317); slice 012 landed in a follow-up commit on the same branch. The fork's
-`main` is untouched at `403bbfc`. One commit per session on purpose: the slice docs carry the
-history, and the tree was tested as a whole.
+files, +4090/−317); 012, 013 and 014 landed as follow-up commits on the same branch. The
+fork's `main` is untouched at `403bbfc`. One commit per session on purpose: the slice docs
+carry the history, and the tree was tested as a whole.
 
 ## Pick up here next session
 
-1. **Android toolchain (highest value).** Install the SDK/JDK, run `flutter doctor`, then
-   `flutter build apk --debug` and install over USB. That unlocks the only acceptance checks
-   that are still unmeasured:
+1. **Phone acceptance pass (highest value).** The toolchain is installed and the debug APK
+   builds. Connect the Pixel 9, enable USB debugging, then `flutter run --profile` and measure
+   the checks that are still unmeasured:
    - `nextCoachStep` latency on the device (desktop VM was p95 0.8 ms, max 3.4 ms);
    - the coach bar at 360×640 and at 2× text (grid lands near 168 px — tight);
    - the Android share sheet;
    - the first-run theme sheet on a real install.
-2. **Manual web pass** if the device is not ready: settings sections and previews; the
+2. **Manual web pass** if the phone is not ready: settings sections and previews; the
    five-page carousel, pips and action swapping; the first-run sheet after clearing site
    data; and slice 012 — select a digit and compare the matches, open the coach to a pattern
    to confirm its tint survives, walk every shortcut, and confirm `r` asks before resets.
    For 013: play a few moves, leave the game, reopen it, undo twice.
 3. **Backlog, none urgent**:
-   - Board semantics for screen readers: its own slice, deliberately placed after the
-     Android toolchain so TalkBack can judge it. There is no `Semantics` in `lib/` today.
+   - Board semantics for screen readers: its own slice, now that a device can judge it.
+     There is no `Semantics` in `lib/` today.
    - If 2× text feels cramped, cap the coach bar's growth before shrinking the grid further.
 4. **Committing from here on.** Commit per slice or per session on `coach-and-export` and
    push to `origin`, which is your fork. Never push to `main` and never create a `v*` tag:
@@ -141,3 +151,18 @@ history, and the tree was tested as a whole.
   no elimination, because puzzles are generated unseeded and a singles-only walk never
   reaches one. Attempts without oracle work are cheap; do not read the retry as tolerance for
   an unsound elimination.
+- **Android tool details.** `android/local.properties` and `android/key.properties` are both
+  gitignored and must stay out of commits. A local release build without a keystore warns
+  "No signing credentials found" and produces an unsigned APK; a signed daily driver needs its
+  own keystore, and `v*` tags still must not be created.
+- **`flutter doctor` reports "Android license status unknown"** even though the build works:
+  the new `sdkmanager` no longer implements `--licenses`, and Flutter still parses for it. The
+  eight licence files are in `~/Library/Android/sdk/licenses`. Do not chase this warning.
+- **Phone testing shortcuts:** `adb shell settings put system font_scale 2.0` (reset with
+  `1.0`) for 2× text, and `adb shell wm size 720x1280` with `adb shell wm density 320` for a
+  360×640 logical viewport (reset both with `wm size reset` and `wm density reset`). Use
+  `flutter run --profile`, never debug, when timing the coach.
+- **PATH:** add
+  `/Users/jacler/flutter-3.47.0/flutter/bin:/Users/jacler/Library/Android/sdk/platform-tools`
+  if you want `flutter` and `adb` bare. Keep the pinned 3.47.0 tree first; the unused 3.47.9
+  tree at `/Users/jacler/flutter` should be deleted.
