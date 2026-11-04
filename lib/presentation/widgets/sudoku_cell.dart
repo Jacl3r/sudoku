@@ -80,22 +80,27 @@ class SudokuCell extends StatelessWidget {
         ? <int>{...notes, ...coach.mark, ...coach.strike}
         : notes;
 
-    // Only the selected cell gets the full primary fill; a digit or note match
-    // gets a soft tint, so tapping a digit no longer floods the board.
+    // A digit match, whether in the value or in the notes, gets one opaque
+    // primary fill so the board reads as "all the 5s". The selected cell keeps
+    // the full fill plus the red border, which is the navigation cue. A cell
+    // the coach has painted keeps the coach's own tint.
+    final hasDigitHighlight =
+        (isSameDigit || hasNoteOfSameDigit) && coach.tint == CoachTint.none;
+
     final highlightColor = isError
         ? scheme.errorContainer
         : isSelected
         ? scheme.primary
-        : isSameDigit || hasNoteOfSameDigit
-        ? Color.alphaBlend(scheme.primary.withValues(alpha: 0.18), baseColor)
+        : hasDigitHighlight
+        ? Color.lerp(baseColor, scheme.primary, 0.8)!
         : Colors.transparent;
 
+    final onHighlight = isSelected || hasDigitHighlight;
     final foreground = isGiven && maskGivenCells
-        ? scheme.surface
-        : (isSelected ? scheme.surface : scheme.onSurface);
+        ? (onHighlight ? scheme.onPrimary : scheme.surface)
+        : (onHighlight ? scheme.onPrimary : scheme.onSurface);
 
-    final isHighlighted =
-        isError || isSelected || isSameDigit || hasNoteOfSameDigit;
+    final isHighlighted = isError || onHighlight;
 
     return Container(
       decoration: BoxDecoration(
@@ -173,14 +178,14 @@ class SudokuCell extends StatelessWidget {
                 .grid => NotesGrid(
                   notes: shownNotes,
                   cellSize: size,
-                  hasNoteOfSameDigit: hasNoteOfSameDigit || isSelected,
+                  hasNoteOfSameDigit: onHighlight,
                   mark: coach.mark,
                   strike: coach.strike,
                 ),
                 .fixed => FixedNotesGrid(
                   notes: shownNotes,
                   cellSize: size,
-                  hasNoteOfSameDigit: hasNoteOfSameDigit || isSelected,
+                  hasNoteOfSameDigit: onHighlight,
                   mark: coach.mark,
                   strike: coach.strike,
                 ),

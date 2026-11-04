@@ -92,60 +92,75 @@ bool _keepsCandidate(
   return solve();
 }
 
+/// Plays one generated puzzle with the coach, oracle-checking every elimination
+/// it meets, and returns how many eliminations were validated.
+int _walkAndCheck(Difficulty difficulty) {
+  var checked = 0;
+  final puzzle = generatePuzzle(difficulty);
+  final engine = GameEngine(
+    GameState.newGame(puzzle: puzzle, difficulty: difficulty),
+  );
+
+  for (var move = 0; move < 400; move++) {
+    final state = engine.currentState;
+    if (state.puzzleComplete) break;
+
+    final values = state.grid.values;
+    final board = CoachBoard.fromState(values, [
+      for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
+    ]);
+    final candidates = [
+      for (var i = 0; i < 81; i++) board.digitsAt(i).toSet(),
+    ];
+
+    // Early positions are nearly empty; proving a digit impossible there
+    // costs far more than it is worth, and eliminations only start to
+    // appear once the board is populated.
+    final empty = values.where((v) => v == 0).length;
+    if (empty <= 45) {
+      for (final detect in coachDetectors) {
+        final step = detect(board);
+        if (step == null) continue;
+        step.eliminations.forEach((cell, digits) {
+          for (final digit in digits) {
+            expect(
+              _keepsCandidate(
+                values,
+                candidates,
+                cell: cell,
+                digit: digit,
+              ),
+              isFalse,
+              reason:
+                  '${step.technique} removed $digit from '
+                  '${cellName(cell)} at move $move, but some completion '
+                  'keeps it',
+            );
+            checked++;
+          }
+        });
+      }
+    }
+
+    final step = nextCoachStep(state);
+    if (step == null) break;
+    engine.applyCoachStep(step);
+  }
+
+  return checked;
+}
+
 void main() {
   group('Coach soundness', () {
     test('every elimination during a real solve is sound', () {
       var checked = 0;
       for (final difficulty in [Difficulty.hard, Difficulty.expert]) {
-        final puzzle = generatePuzzle(difficulty);
-        final engine = GameEngine(
-          GameState.newGame(puzzle: puzzle, difficulty: difficulty),
-        );
-
-        for (var move = 0; move < 400; move++) {
-          final state = engine.currentState;
-          if (state.puzzleComplete) break;
-
-          final values = state.grid.values;
-          final board = CoachBoard.fromState(values, [
-            for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
-          ]);
-          final candidates = [
-            for (var i = 0; i < 81; i++) board.digitsAt(i).toSet(),
-          ];
-
-          // Early positions are nearly empty; proving a digit impossible there
-          // costs far more than it is worth, and eliminations only start to
-          // appear once the board is populated.
-          final empty = values.where((v) => v == 0).length;
-          if (empty <= 45) {
-            for (final detect in coachDetectors) {
-              final step = detect(board);
-              if (step == null) continue;
-              step.eliminations.forEach((cell, digits) {
-                for (final digit in digits) {
-                  expect(
-                    _keepsCandidate(
-                      values,
-                      candidates,
-                      cell: cell,
-                      digit: digit,
-                    ),
-                    isFalse,
-                    reason:
-                        '${step.technique} removed $digit from '
-                        '${cellName(cell)} at move $move, but some completion '
-                        'keeps it',
-                  );
-                  checked++;
-                }
-              });
-            }
-          }
-
-          final step = nextCoachStep(state);
-          if (step == null) break;
-          engine.applyCoachStep(step);
+        // Puzzles are generated unseeded, and a board that falls to singles
+        // alone never reaches an elimination. Retry instead of failing on a
+        // lucky board; a walk that checks nothing costs no oracle work.
+        final before = checked;
+        for (var attempt = 0; attempt < 5 && checked == before; attempt++) {
+          checked += _walkAndCheck(difficulty);
         }
       }
 

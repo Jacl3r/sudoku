@@ -65,6 +65,19 @@ class GameScreen extends ConsumerWidget {
                     final key = event.logicalKey;
                     final current = board.selectedCell ?? 0;
 
+                    // Leave modifier combinations to the host, except undo.
+                    final modifier =
+                        HardwareKeyboard.instance.isMetaPressed ||
+                        HardwareKeyboard.instance.isControlPressed;
+                    if (modifier) {
+                      if (key == LogicalKeyboardKey.keyZ &&
+                          !game.puzzleComplete) {
+                        gameNotifier.undo();
+                        return .handled;
+                      }
+                      return .ignored;
+                    }
+
                     switch (key) {
                       case .arrowLeft || .keyA:
                         if (current % 9 > 0) {
@@ -84,11 +97,35 @@ class GameScreen extends ConsumerWidget {
                           boardNotifier.selectCell(current + 9);
                         }
                         return .handled;
-                      case .backspace || .delete:
+                      default:
+                    }
+
+                    // Navigation stays live, every action below goes quiet once
+                    // the puzzle is solved.
+                    if (game.puzzleComplete) return .ignored;
+
+                    switch (key) {
+                      case .backspace || .delete || .keyX:
                         gameNotifier.erase();
+                        return .handled;
+                      case .keyN || .keyP:
+                        boardNotifier.toggleInputMode();
+                        return .handled;
+                      case .keyU:
+                        gameNotifier.undo();
+                        return .handled;
+                      case .keyH:
+                        showHintSheet(context, ref, gameNotifier);
+                        return .handled;
+                      case .keyR:
+                        confirmReset(context, gameNotifier, boardNotifier);
+                        return .handled;
+                      case .keyE:
+                        showExportSheet(context, game);
                         return .handled;
                       default:
                     }
+
                     if (key.keyLabel.length == 1) {
                       final d = int.tryParse(key.keyLabel);
                       if (d != null && d >= 1 && d <= 9) {
@@ -99,10 +136,6 @@ class GameScreen extends ConsumerWidget {
                         }
                         return .handled;
                       }
-                    }
-                    if (key.keyLabel.toLowerCase() == 'p') {
-                      boardNotifier.toggleInputMode();
-                      return .handled;
                     }
                     return .ignored;
                   },
@@ -133,7 +166,7 @@ class GameScreen extends ConsumerWidget {
                       children: [
                         if (game != null)
                           IconButton(
-                            tooltip: 'Export',
+                            tooltip: shortcutHint('Export', 'E'),
                             onPressed: () {
                               final current = ref.read(gameProvider).value;
                               if (current != null) {

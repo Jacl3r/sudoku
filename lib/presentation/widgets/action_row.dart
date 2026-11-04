@@ -1,8 +1,102 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:sudoku/presentation/shared/utils.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/coach_provider.dart';
 import 'package:sudoku/providers/game_notifier.dart';
+
+/// Asks before restarting the current puzzle. Shared by the toolbar and the
+/// `r` shortcut.
+Future<void> confirmReset(
+  BuildContext context,
+  GameNotifier notifier,
+  BoardNotifier boardNotifier,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Reset game?'),
+      content: const Text(
+        'This will restart the current puzzle. '
+        'Your progress will be lost.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text('Reset'),
+        ),
+      ],
+      actionsAlignment: .spaceBetween,
+    ),
+  );
+  if (confirmed == true) {
+    notifier.restart();
+    boardNotifier.reset();
+  }
+}
+
+/// The hint sheet. Shared by the toolbar and the `h` shortcut.
+Future<void> showHintSheet(
+  BuildContext context,
+  WidgetRef ref,
+  GameNotifier notifier,
+) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const .only(bottom: 48, top: 24),
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            Text('Hints', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.school_outlined),
+              title: const Text('Next step'),
+              subtitle: const Text('A tip in stages, not the answer'),
+              onTap: () {
+                Navigator.pop(ctx);
+                final game = ref.read(gameProvider).value;
+                if (game != null) {
+                  ref.read(coachProvider.notifier).start(game);
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.lightbulb_outline_rounded),
+              title: const Text('Reveal a cell'),
+              onTap: () {
+                Navigator.pop(ctx);
+                notifier.hint();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline_rounded),
+              title: const Text('Validate'),
+              onTap: () {
+                Navigator.pop(ctx);
+                notifier.runValidation();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.autorenew),
+              title: const Text('Auto fill all notes'),
+              onTap: () {
+                Navigator.pop(ctx);
+                notifier.applyAutoNotes();
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
 class ActionRow extends ConsumerWidget {
   const ActionRow({super.key});
@@ -22,116 +116,30 @@ class ActionRow extends ConsumerWidget {
         children: [
           _ActionButton(
             icon: Icons.refresh_rounded,
-            onTap: () => _confirmReset(context, gameNotifier, boardNotifier),
+            onTap: () => confirmReset(context, gameNotifier, boardNotifier),
             tooltip: 'Reset',
+            shortcut: 'R',
           ),
           _ActionButton(
             icon: Icons.lightbulb_outline_rounded,
-            onTap: () => _showMoreSheet(context, ref, gameNotifier),
+            onTap: () => showHintSheet(context, ref, gameNotifier),
             tooltip: 'Hint',
+            shortcut: 'H',
           ),
           _ActionButton(
             icon: Icons.edit_outlined,
             active: board.inputMode == .pencil,
             onTap: boardNotifier.toggleInputMode,
             tooltip: 'Pencil',
+            shortcut: 'N',
           ),
           _ActionButton(
             icon: Icons.undo_rounded,
             onTap: gameNotifier.undo,
             tooltip: 'Undo',
+            shortcut: 'U',
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _confirmReset(
-    BuildContext context,
-    GameNotifier notifier,
-    BoardNotifier boardNotifier,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset game?'),
-        content: const Text(
-          'This will restart the current puzzle. '
-          'Your progress will be lost.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Reset'),
-          ),
-        ],
-        actionsAlignment: .spaceBetween,
-      ),
-    );
-    if (confirmed == true) {
-      notifier.restart();
-      boardNotifier.reset();
-    }
-  }
-
-  Future<void> _showMoreSheet(
-    BuildContext context,
-    WidgetRef ref,
-    GameNotifier notifier,
-  ) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const .only(bottom: 48, top: 24),
-          child: Column(
-            mainAxisSize: .min,
-            children: [
-              Text('Hints', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: const Icon(Icons.school_outlined),
-                title: const Text('Next step'),
-                subtitle: const Text('A tip in stages, not the answer'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  final game = ref.read(gameProvider).value;
-                  if (game != null) {
-                    ref.read(coachProvider.notifier).start(game);
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.lightbulb_outline_rounded),
-                title: const Text('Reveal a cell'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  notifier.hint();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.check_circle_outline_rounded),
-                title: const Text('Validate'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  notifier.runValidation();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.autorenew),
-                title: const Text('Auto fill all notes'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  notifier.applyAutoNotes();
-                },
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -143,12 +151,14 @@ class _ActionButton extends StatelessWidget {
     this.onTap,
     this.active = false,
     required this.tooltip,
+    this.shortcut,
   });
 
   final IconData icon;
   final VoidCallback? onTap;
   final bool active;
   final String tooltip;
+  final String? shortcut;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +170,7 @@ class _ActionButton extends StatelessWidget {
         : scheme.onSurface;
 
     return Tooltip(
-      message: tooltip,
+      message: shortcut == null ? tooltip : shortcutHint(tooltip, shortcut!),
       child: InkWell(
         onTap: onTap,
         borderRadius: .circular(6),

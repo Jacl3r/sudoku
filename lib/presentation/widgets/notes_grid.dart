@@ -55,7 +55,7 @@ class NotesGrid extends StatelessWidget {
     if (notes.isEmpty) return const SizedBox.shrink();
 
     final scheme = Theme.of(context).colorScheme;
-    final color = hasNoteOfSameDigit ? scheme.surface : scheme.onSurface;
+    final color = hasNoteOfSameDigit ? scheme.onPrimary : scheme.onSurface;
     final fontSize = cellSize * 0.2;
     final digits = notes.toList()..sort();
     final (top, middle, bottom) = _splitRows(digits);
@@ -144,7 +144,7 @@ class FixedNotesGrid extends StatelessWidget {
     }
 
     final cs = Theme.of(context).colorScheme;
-    final color = hasNoteOfSameDigit ? cs.surface : cs.onSurface;
+    final color = hasNoteOfSameDigit ? cs.onPrimary : cs.onSurface;
     final fontSize = cellSize * 0.22;
 
     return GridView.builder(

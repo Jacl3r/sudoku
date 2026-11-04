@@ -72,12 +72,14 @@ Two PRDs, eleven slices, all implemented:
 | 009 | Settings in four sections with previews next to their controls |
 | 010 | Home IA: five-page carousel, pips, Continue emphasised, top bar reduced |
 | 011 | One-time theme sheet on first launch |
+| 012 | Same-digit highlight at full weight; keyboard shortcuts with desktop tooltip hints |
 
 Current numbers: **154 tests**, `flutter analyze` clean, web build green.
 
-Everything is committed and pushed to `origin/coach-and-export` as **`564663b`** (53 files,
-+4090/−317). The fork's `main` is untouched at `403bbfc`. One commit on purpose: the slice
-docs carry the history, and the tree was tested as a whole.
+Slices 001–011 are committed and pushed to `origin/coach-and-export` as **`564663b`** (53
+files, +4090/−317); slice 012 landed in a follow-up commit on the same branch. The fork's
+`main` is untouched at `403bbfc`. One commit per session on purpose: the slice docs carry the
+history, and the tree was tested as a whole.
 
 ## Pick up here next session
 
@@ -89,7 +91,9 @@ docs carry the history, and the tree was tested as a whole.
    - the Android share sheet;
    - the first-run theme sheet on a real install.
 2. **Manual web pass** if the device is not ready: settings sections and previews; the
-   five-page carousel, pips and action swapping; the first-run sheet after clearing site data.
+   five-page carousel, pips and action swapping; the first-run sheet after clearing site
+   data; and slice 012 — select a digit and compare the matches, open the coach to a pattern
+   to confirm its tint survives, walk every shortcut, and confirm `r` asks before resets.
 3. **Backlog, none urgent**:
    - Resume drops undo history (`GameState.fromJson` returns `history: const []`). Effort M.
    - Dead `PuzzleImportService.sharePuzzle` and its test.
@@ -118,3 +122,12 @@ docs carry the history, and the tree was tested as a whole.
   in portrait the grid now shrinks rather than falling back to the screen width.
 - The `startup` flow shows the theme sheet from a post-frame callback in `HomeScreen`; the
   flag is written when the sheet's future completes, whatever way it was dismissed.
+- **Keyboard shortcuts** live in the `Focus.onKeyEvent` in `game_screen.dart`. Navigation is
+  always live; every action key is inert on a completed puzzle. `confirmReset` and
+  `showHintSheet` are top-level functions in `action_row.dart` so the toolbar and the keys
+  share one path. Tooltip key hints come from `showKeyboardHints` / `shortcutHint` in
+  `presentation/shared/utils.dart` and follow the host OS on web.
+- **`coach_soundness_test.dart` retries** a difficulty up to five times while it has checked
+  no elimination, because puzzles are generated unseeded and a singles-only walk never
+  reaches one. Attempts without oracle work are cheap; do not read the retry as tolerance for
+  an unsound elimination.
