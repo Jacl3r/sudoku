@@ -115,6 +115,7 @@ class GameState {
             .toList() ??
         List<Set<int>>.generate(81, (_) => {});
     final assistsMap = Map<String, dynamic>.from(json['assists'] as Map);
+    final historyJson = json['history'] as List?;
 
     return GameState(
       difficulty: Difficulty.fromValue(json['difficulty'] as int),
@@ -123,7 +124,13 @@ class GameState {
       grid: grid,
       notes: notes,
       coachEliminations: eliminations,
-      history: const [],
+      // Saves written before undo was persisted have no history to restore.
+      history: historyJson == null
+          ? const []
+          : [
+              for (final entry in historyJson)
+                GameAction.fromJson(Map<String, dynamic>.from(entry as Map)),
+            ],
       assists: GameAssists(
         hints: assistsMap['hints'] as bool,
         autoNotes: assistsMap['autoNotes'] as bool,
@@ -140,6 +147,7 @@ class GameState {
     'givenValues': puzzle.given.values,
     'notes': notes.map((s) => s.toList()).toList(),
     'coachEliminations': coachEliminations.map((s) => s.toList()).toList(),
+    'history': [for (final action in history) action.toJson()],
     'assists': {
       'hints': assists.hints,
       'autoNotes': assists.autoNotes,

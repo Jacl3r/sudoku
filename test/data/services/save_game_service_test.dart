@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:sudoku/data/hive_boxes.dart';
 import 'package:sudoku/data/services/save_game_service.dart';
+import 'package:sudoku/domain/coach/coach_step.dart';
+import 'package:sudoku/domain/engine/game_engine.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_assists.dart';
 import 'package:sudoku/domain/models/game_state.dart';
@@ -115,6 +117,59 @@ void main() {
       isNull,
       reason: 'deleting the active import clears the marker',
     );
+  });
+
+  test('undo survives a save round trip', () async {
+    final service = SaveGameService();
+    final engine = GameEngine(
+      GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
+    )
+      ..inputDigit(2, 4)
+      ..toggleNote(3, 7)
+      ..inputDigit(10, 1);
+
+    await service.save(engine.currentState);
+
+    final restored = GameEngine(service.load(Difficulty.expert)!);
+    expect(restored.canUndo, isTrue);
+    expect(restored.currentState.history.length, 3);
+
+    restored.undo();
+    expect(restored.currentState.grid.valueAt(10), 0);
+    restored.undo();
+    expect(restored.currentState.notes[3], isEmpty);
+    restored.undo();
+    expect(restored.currentState.grid.valueAt(2), 0);
+    expect(restored.canUndo, isFalse);
+  });
+
+  test('a coach step undoes as one step after a reload', () async {
+    final service = SaveGameService();
+    const step = CoachStep(
+      headline: 'Look for a Skyscraper.',
+      technique: 'Skyscraper',
+      about: 'about',
+      nudge: 'nudge',
+      explanation: 'explanation',
+      eliminations: {
+        2: {5},
+      },
+    );
+    final engine = GameEngine(
+      GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
+    )
+      ..toggleNote(2, 5)
+      ..applyCoachStep(step);
+
+    expect(engine.currentState.notes[2], isEmpty);
+    expect(engine.currentState.coachEliminationsAt(2), {5});
+
+    await service.save(engine.currentState);
+    final restored = GameEngine(service.load(Difficulty.expert)!)..undo();
+
+    expect(restored.currentState.notes[2], {5});
+    expect(restored.currentState.coachEliminationsAt(2), isEmpty);
+    expect(restored.currentState.history.length, 1);
   });
 
   test('the meta key is not mistaken for a difficulty', () async {

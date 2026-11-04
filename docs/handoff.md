@@ -73,8 +73,9 @@ Two PRDs, eleven slices, all implemented:
 | 010 | Home IA: five-page carousel, pips, Continue emphasised, top bar reduced |
 | 011 | One-time theme sheet on first launch |
 | 012 | Same-digit highlight at full weight; keyboard shortcuts with desktop tooltip hints |
+| 013 | Undo survives a save: every action type is serialized with the state |
 
-Current numbers: **154 tests**, `flutter analyze` clean, web build green.
+Current numbers: **159 tests**, `flutter analyze` clean, web build green.
 
 Slices 001–011 are committed and pushed to `origin/coach-and-export` as **`564663b`** (53
 files, +4090/−317); slice 012 landed in a follow-up commit on the same branch. The fork's
@@ -90,16 +91,18 @@ history, and the tree was tested as a whole.
    - the coach bar at 360×640 and at 2× text (grid lands near 168 px — tight);
    - the Android share sheet;
    - the first-run theme sheet on a real install.
-2. **Manual web pass** if the device is not ready: settings sections and previews; the
+2. **Slice 014** is written and waiting: delete the dead `PuzzleImportService.sharePuzzle`, its
+   test, and the imports only it needed.
+3. **Manual web pass** if the device is not ready: settings sections and previews; the
    five-page carousel, pips and action swapping; the first-run sheet after clearing site
    data; and slice 012 — select a digit and compare the matches, open the coach to a pattern
    to confirm its tint survives, walk every shortcut, and confirm `r` asks before resets.
-3. **Backlog, none urgent**:
-   - Resume drops undo history (`GameState.fromJson` returns `history: const []`). Effort M.
-   - Dead `PuzzleImportService.sharePuzzle` and its test.
-   - Board semantics for screen readers (large, visual-first app today).
+   For 013: play a few moves, leave the game, reopen it, undo twice.
+4. **Backlog, none urgent**:
+   - Board semantics for screen readers: its own slice, deliberately placed after the
+     Android toolchain so TalkBack can judge it. There is no `Semantics` in `lib/` today.
    - If 2× text feels cramped, cap the coach bar's growth before shrinking the grid further.
-4. **Committing from here on.** Commit per slice or per session on `coach-and-export` and
+5. **Committing from here on.** Commit per slice or per session on `coach-and-export` and
    push to `origin`, which is your fork. Never push to `main` and never create a `v*` tag:
    `fork-android.yml` publishes a signed release on tags. A branch push only runs analyze
    and tests.
@@ -108,6 +111,14 @@ history, and the tree was tested as a whole.
 
 - **Riverpod** throws if another provider is modified inside `onDispose`. That is why
   `activeSaveKeyProvider` is never cleared there; every entry point sets it explicitly.
+- **Saves carry the undo history.** `GameAction.toJson` / `GameAction.fromJson` encode every
+  action type, and an all-empty coach-elimination snapshot is omitted (≈242 bytes saved per
+  action). A 300-action notes-heavy game measured 30,777 bytes, ~102 B/action. An unknown
+  action type throws rather than being skipped. Saves written before 013 have no `history`
+  key and load with an empty history.
+- `fromJson` deliberately does not restore `puzzleComplete`: restoring it would disable the
+  action row on open while the solved overlay never appears. Completed saves are deleted on
+  exit instead.
 - **Save keys** in `gameBox`: a difficulty name, `import:<id>`, plus the meta keys
   `__imports` (index) and `__lastPlayed` (a game key). `settingsBox` holds `difficulty_key`
   and `theme_onboarding_seen`.
