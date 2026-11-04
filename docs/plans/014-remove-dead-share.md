@@ -26,10 +26,19 @@ full puzzle string plus its context. The method survives only in its own test, a
 
 ## Acceptance criteria
 
-- [ ] `sharePuzzle` no longer exists and nothing references it.
-- [ ] Importing a puzzle still validates uniqueness, computes difficulty, and opens the game.
-- [ ] `flutter analyze` is clean and the remaining tests pass.
-- [ ] The test count drops by exactly one, and nothing else.
+- [x] `sharePuzzle` no longer exists and nothing references it.
+- [x] Importing a puzzle still validates uniqueness, computes difficulty, and opens the game.
+- [x] `flutter analyze` is clean and the remaining tests pass.
+- [x] The test count drops by exactly one, and nothing else.
+
+## Findings (2026-11-04)
+
+- Removed the method, its test, the `flutter/services.dart` import and the two model imports
+  that only the deleted test used. `loadPuzzleIntoGame` is untouched.
+- Tests went from 159 to **158**; `flutter analyze` is clean. No web build was run: no UI or
+  build input changed.
+- Nothing referenced the method in `lib/`, so no call sites needed rewiring. Sharing a grid
+  remains the export sheet's job.
 
 ## Testing
 
