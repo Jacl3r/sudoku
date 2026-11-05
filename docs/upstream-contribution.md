@@ -121,7 +121,7 @@ Order matters; each step needs its own consent.
 | # | Piece | Branch (off `upstream/main`) | Notes |
 |---|---|---|---|
 | 0 | Ask first | none (a Discussion) | Short note and screenshots, no code in it. Draft: `docs/upstream-draft-discussion.md`. Say no is fine. |
-| 1 | Export sheet | `feat/export-puzzle` (`8ccc9c5`) | Built and pushed to the fork. Copy-only, three contents, three formats, optional AI prompt, entry in the Hints sheet. No share channel, no link format, no remembered choice. |
+| 1 | Export sheet | `feat/export-puzzle` (`31888dd`) | Built and pushed to the fork. Copy-only, three contents, three formats, optional AI prompt. The action sits in the game top bar next to the theme picker, because it applies to the whole board. No share channel, no link format, no remembered choice. |
 | 2 | Turbot Fish fix | none | **Retracted, see below.** Branch deleted. |
 | 3 | Coach | only if he says yes | He dropped a hint system as too complex. A lighter, opt-in version at most. |
 | 4 | Later, small, unevaluated | `feat/...` | Keyboard shortcuts (his `Focus` handler only knows arrows, digits and `p`); persisted undo (touches his own `GameAction` refactor, so ask first). |
@@ -140,7 +140,7 @@ gitGraph
   checkout main
   commit id: "upstream v1.2.0 fa47319"
   branch feat/export-puzzle
-  commit id: "export sheet 8ccc9c5"
+  commit id: "export sheet 31888dd"
 ```
 
 | Branch | Based on | Role | Goes upstream? |

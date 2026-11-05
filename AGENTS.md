@@ -26,6 +26,27 @@ pick up next. Anything that could reach the upstream author is governed by
 - Work meant for upstream is cut as a small branch from `upstream/main`, never
   from `coach-and-export`, and never contains fork-only changes (applicationId,
   label, `fork-android.yml`, workflow edits, `AGENTS.md`, `docs/`, version bumps).
+- **Big decisions need a second confirmation.** Before doing anything with real
+  consequences (rewriting or deleting a branch, moving a feature to a new
+  location, restructuring the repo, merging upstream into the fork, anything
+  that touches the upstream author, or anything hard to undo), state the
+  options with their trade-offs, say which one you recommend and why, and ask
+  before acting. A quick "ok" is not informed consent: the owner is a designer,
+  not a developer, and may not see a consequence that is obvious to an agent.
+  Asking twice costs one message; unpicking a wrong call can cost a session.
+- **UI follows Material 3, and the choice has to be argued.** Check the M3
+  guidance for the component before proposing a placement or a layout, and say
+  in one line why the choice is right. Rules learned the hard way:
+  - An action that applies to the whole board belongs in the game top bar, with
+    the other board-wide actions, labelled by tooltip. Do not bury it in an
+    unrelated menu; hidden actions are not found.
+  - Supporting text that applies to all of a sheet's or dialog's content sits
+    directly under the headline, above that content. Helper text for a single
+    control sits under that control.
+  - Body and supporting text is `bodyMedium` (14) or larger; `bodySmall` (12)
+    is Material's floor for captions, not for text people must read.
+  - Icons are 48dp targets; sheets cap at 640dp; long labels wrap rather than
+    truncate at large text sizes.
 - Keep the UI clean and light. A change has to earn its weight, not just be
   correct.
 - Respect layer boundaries: pure Sudoku logic in `lib/domain/`, persistence in
