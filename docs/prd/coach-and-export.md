@@ -1,7 +1,7 @@
 # PRD — Coach, AI export, and daily-driver polish
 
 Status: ready for slicing
-Branch: `coach-and-export` (personal fork)
+Branch: `daily-driver` (personal fork)
 Work item target: `docs/plans/NNN-slug.md` (see `AGENTS.md`)
 
 ## 1. Problem

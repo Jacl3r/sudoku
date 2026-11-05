@@ -11,7 +11,7 @@ pick up next. Anything that could reach the upstream author is governed by
 
 - Never commit to `main`. The fork's `main` is a clean mirror of `upstream/main`
   and only moves by fast-forward (`git merge --ff-only upstream/main`). Personal
-  work stays on `coach-and-export` (or `multiplayer`, or a branch cut from them);
+  work stays on `daily-driver` (or `multiplayer`, or a branch cut from them);
   upstream-bound work goes on its own branch cut from `upstream/main`.
 - Never push tags to `origin`. Upstream's tags (`v1.2.0` ...) would trigger a
   release build in the fork.
@@ -24,7 +24,7 @@ pick up next. Anything that could reach the upstream author is governed by
   consequences are for the upstream author, and wait for a clear yes. A past
   yes does not carry over to the next time.
 - Work meant for upstream is cut as a small branch from `upstream/main`, never
-  from `coach-and-export`, and never contains fork-only changes (applicationId,
+  from `daily-driver`, and never contains fork-only changes (applicationId,
   label, `fork-android.yml`, workflow edits, `AGENTS.md`, `docs/`, version bumps).
 - **Big decisions need a second confirmation.** Before doing anything with real
   consequences (rewriting or deleting a branch, moving a feature to a new
@@ -106,7 +106,7 @@ settings redesign (slices 008–011) and is the active one.
   difficulty selector remembers the last played difficulty.
 - X-Chains and XY-Chains are out of scope for now.
 - Upstream contribution is no longer a non-goal, but it is opt-in per change.
-  `coach-and-export` stays the personal daily-driver; upstream gets only small,
+  `daily-driver` stays the personal daily-driver; upstream gets only small,
   separately justified pieces (see `docs/upstream-contribution.md`). The PRD lines
   that list upstream contribution as out of scope describe the original fork
   intent and are superseded by this rule.

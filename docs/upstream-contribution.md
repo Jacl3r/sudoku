@@ -9,7 +9,7 @@ asked for it. We are guests there.
 
 ## History: PR #11
 
-On 2026-10-11 a PR "Coach and export" was opened by accident from `Jacl3r:coach-and-export`
+On 2026-10-11 a PR "Coach and export" was opened by accident from `Jacl3r:coach-and-export` (since renamed `daily-driver`)
 to upstream `main` (the empty template, closed after ~15 seconds). The author answered
 anyway, and the thread is the best statement we have of what he wants:
 
@@ -51,7 +51,7 @@ surprise second PR. Do not behave as if the first message never happened.
 2. **Pushing to `origin` is not contact.** `origin` is the fork. But a fresh push to a
    fork makes GitHub show a "Compare & pull request" banner that targets upstream by
    default. That banner is how PR #11 happened. Do not click it unless we mean it.
-3. **Cut from `upstream/main`, not from `coach-and-export`.** Fetch first
+3. **Cut from `upstream/main`, not from `daily-driver`.** Fetch first
    (`git fetch upstream`). Cherry-pick or re-implement the minimum; do not merge the
    fork branch.
 4. **Never include fork-only changes**: applicationId, "Sudoku+" label,
@@ -85,8 +85,8 @@ GitHub allows one fork of a repo per account, so separation is by branch:
 | Kind | Branch | Based on | Purpose |
 |---|---|---|---|
 | Mirror | `main` | `upstream/main` | Fast-forward only. No work, no commits. |
-| Personal | `coach-and-export` | `v1.1.0` | Daily driver: fork id, label, fork CI. |
-| Personal | `multiplayer` | `coach-and-export` | Private experiment, never merged. |
+| Personal | `daily-driver` | `v1.1.0` | Daily driver: fork id, label, fork CI. |
+| Personal | `multiplayer` | `daily-driver` | Private experiment, never merged. |
 | Upstream-bound | `feat/...`, `fix/...` | `upstream/main` | One concern each, his naming. |
 
 Notes:
@@ -98,9 +98,9 @@ Notes:
 - Upstream-bound branches do not carry `fork-android.yml`, so the fork runs no CI on
   them. Run `dart format .`, `dart fix --apply`, `flutter analyze` and `flutter test`
   locally before pushing.
-- When upstream merges a piece, drop our copy from `coach-and-export` instead of
+- When upstream merges a piece, drop our copy from `daily-driver` instead of
   carrying a duplicate.
-- Catching `coach-and-export` up to upstream (11 conflicting files) is a separate
+- Catching `daily-driver` up to upstream (11 conflicting files) is a separate
   task, done after the small pieces are settled.
 
 ### `fork-android.yml`: do we need it?
@@ -132,7 +132,7 @@ Order matters; each step needs its own consent.
 ```mermaid
 gitGraph
   commit id: "v1.1.0 403bbfc"
-  branch coach-and-export
+  branch daily-driver
   commit id: "coach, export, redesign"
   commit id: "slices 012-014, docs"
   branch multiplayer
@@ -146,8 +146,8 @@ gitGraph
 | Branch | Based on | Role | Goes upstream? |
 |---|---|---|---|
 | `main` | `upstream/main` | Mirror, fast-forward only | n/a |
-| `coach-and-export` | `v1.1.0` | Personal daily driver | Never as a whole |
-| `multiplayer` | `coach-and-export` | Private experiment | Never |
+| `daily-driver` | `v1.1.0` | Personal daily driver | Never as a whole |
+| `multiplayer` | `daily-driver` | Private experiment | Never |
 | `feat/export-puzzle` | `upstream/main` | Candidate PR piece 1 | Only with consent |
 
 ### Turbot Fish retracted
@@ -159,12 +159,12 @@ seeing both tips can lose the digit, base cells included, and upstream's code is
 Measured on 56,057 random consistent positions: 0 wrong eliminations from the original;
 the "fixed" version found nothing on 56% of positions where the original fired. The
 regression test only passes on a synthetic board that is itself contradictory. Nothing
-was sent upstream. The fix remains in `coach-and-export` as a harmless conservative skip.
+was sent upstream. The fix remains in `daily-driver` as a harmless conservative skip.
 
 ## State at 2026-11-05
 
 - Upstream `main` is `fa47319` (v1.2.0). The fork branch is based on `v1.1.0` (`403bbfc`).
-- A test merge of `coach-and-export` into `upstream/main` conflicts in 11 files
+- A test merge of `daily-driver` into `upstream/main` conflicts in 11 files
   (`game_action.dart`, `game_engine.dart`, `game_state.dart`, `game_screen.dart`,
   `home_screen.dart`, `settings_screen.dart`, `game_layout.dart`, `grid_widget.dart`,
   `notes_grid.dart`, `puzzle_import_service.dart` and its test). The fork branch should

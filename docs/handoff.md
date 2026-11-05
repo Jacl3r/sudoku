@@ -12,7 +12,7 @@ tinker. Two features were added on top of upstream: a staged solving-technique *
 an **export** sheet that turns a stuck board into a prompt for an AI. The fork installs next
 to the F-Droid build (`com.jacl3r.sudoku`, label "Sudoku+").
 
-Ground rules (also in `AGENTS.md`): work stays on `coach-and-export`, never `main`; never
+Ground rules (also in `AGENTS.md`): work stays on `daily-driver`, never `main`; never
 create `v*` tags, because `fork-android.yml` publishes a signed release on them; keep the UI
 clean and light.
 
@@ -88,7 +88,7 @@ A separate **`multiplayer`** branch exists for a private browser-only co-op expe
 and is never released; this branch's app is unaffected by it. Nothing from it should be
 cherry-picked here.
 
-Slices 001–011 are committed and pushed to `origin/coach-and-export` as **`564663b`** (53
+Slices 001–011 are committed and pushed to `origin/daily-driver` as **`564663b`** (53
 files, +4090/−317); 012, 013 and 014 landed as follow-up commits on the same branch. The
 fork's `main` is untouched at `403bbfc`. One commit per session on purpose: the slice docs
 carry the history, and the tree was tested as a whole.
@@ -111,7 +111,7 @@ carry the history, and the tree was tested as a whole.
    - Board semantics for screen readers: its own slice, now that a device can judge it.
      There is no `Semantics` in `lib/` today.
    - If 2× text feels cramped, cap the coach bar's growth before shrinking the grid further.
-4. **Committing from here on.** Commit per slice or per session on `coach-and-export` and
+4. **Committing from here on.** Commit per slice or per session on `daily-driver` and
    push to `origin`, which is your fork. Never push to `main` and never create a `v*` tag:
    `fork-android.yml` publishes a signed release on tags. A branch push only runs analyze
    and tests.
