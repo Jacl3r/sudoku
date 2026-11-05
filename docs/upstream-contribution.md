@@ -135,3 +135,9 @@ Order matters; each step needs its own consent.
   `notes_grid.dart`, `puzzle_import_service.dart` and its test). The fork branch should
   not be rebased onto upstream just for contribution; build the small branches fresh.
 - No upstream PRs, issues or Discussions are open from us. PR #11 is closed.
+- Fork `main` was fast-forwarded to `upstream/main` (`fa47319`) on 2026-11-05. No tags
+  were pushed.
+- `fix/turbot-fish-pattern-cells` (`67dd24b`, one commit off `upstream/main`, +33/-2)
+  is pushed to the fork only. Regression test fails on upstream code and passes with
+  the fix; `dart format`, `dart fix`, `flutter analyze` clean; 109 tests pass. No PR
+  has been opened and none will be without consent (rule 1).
