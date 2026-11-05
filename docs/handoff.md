@@ -81,7 +81,7 @@ Two PRDs, fourteen slices, all implemented:
 | 013 | Undo survives a save: every action type is serialized with the state |
 | 014 | Dead `sharePuzzle` removed |
 
-Current numbers: **158 tests**, `flutter analyze` clean, web build green.
+Current numbers: **154 tests**, `flutter analyze` clean, web build green.
 
 A separate **`multiplayer`** branch exists for a private browser-only co-op experiment (PRD
 `docs/prd/multiplayer.md`, slices 015–018 in `docs/plans/`). It never merges into this branch
@@ -90,8 +90,11 @@ cherry-picked here.
 
 Slices 001–011 are committed and pushed to `origin/daily-driver` as **`564663b`** (53
 files, +4090/−317); 012, 013 and 014 landed as follow-up commits on the same branch. The
-fork's `main` is untouched at `403bbfc`. One commit per session on purpose: the slice docs
-carry the history, and the tree was tested as a whole.
+branch is called `daily-driver` since 2026-11-05 (it was `coach-and-export`), and it has
+**upstream v1.2.0 merged in** (`52fe721`), so it is no longer a release behind. The
+fork's `main` tracks `upstream/main` exactly and only moves by fast-forward. One commit
+per session on purpose: the slice docs carry the history, and the tree was tested as a
+whole.
 
 ## Pick up here next session
 

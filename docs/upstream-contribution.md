@@ -85,7 +85,7 @@ GitHub allows one fork of a repo per account, so separation is by branch:
 | Kind | Branch | Based on | Purpose |
 |---|---|---|---|
 | Mirror | `main` | `upstream/main` | Fast-forward only. No work, no commits. |
-| Personal | `daily-driver` | `v1.1.0` | Daily driver: fork id, label, fork CI. |
+| Personal | `daily-driver` | `upstream/main` (v1.2.0) | Daily driver: fork id, label, fork CI. |
 | Personal | `multiplayer` | `daily-driver` | Private experiment, never merged. |
 | Upstream-bound | `feat/...`, `fix/...` | `upstream/main` | One concern each, his naming. |
 
@@ -100,8 +100,8 @@ Notes:
   locally before pushing.
 - When upstream merges a piece, drop our copy from `daily-driver` instead of
   carrying a duplicate.
-- Catching `daily-driver` up to upstream (11 conflicting files) is a separate
-  task, done after the small pieces are settled.
+- Catching `daily-driver` up to upstream is done: v1.2.0 merged on 2026-11-05
+  (`52fe721`). Repeat that merge the same way, on a throwaway branch first.
 
 ### `fork-android.yml`: do we need it?
 
@@ -146,7 +146,7 @@ gitGraph
 | Branch | Based on | Role | Goes upstream? |
 |---|---|---|---|
 | `main` | `upstream/main` | Mirror, fast-forward only | n/a |
-| `daily-driver` | `v1.1.0` | Personal daily driver | Never as a whole |
+| `daily-driver` | `upstream/main` + merge | Personal daily driver | Never as a whole |
 | `multiplayer` | `daily-driver` | Private experiment | Never |
 | `feat/export-puzzle` | `upstream/main` | Candidate PR piece 1 | Only with consent |
 
@@ -163,12 +163,14 @@ was sent upstream. The fix remains in `daily-driver` as a harmless conservative 
 
 ## State at 2026-11-05
 
-- Upstream `main` is `fa47319` (v1.2.0). The fork branch is based on `v1.1.0` (`403bbfc`).
-- A test merge of `daily-driver` into `upstream/main` conflicts in 11 files
-  (`game_action.dart`, `game_engine.dart`, `game_state.dart`, `game_screen.dart`,
-  `home_screen.dart`, `settings_screen.dart`, `game_layout.dart`, `grid_widget.dart`,
-  `notes_grid.dart`, `puzzle_import_service.dart` and its test). The fork branch should
-  not be rebased onto upstream just for contribution; build the small branches fresh.
+- Upstream `main` is `fa47319` (v1.2.0). `daily-driver` has v1.2.0 merged in
+  (`52fe721`), so it is no longer behind; only `multiplayer` is still on v1.1.0.
+- The v1.2.0 merge (`52fe721`) resolved 11 conflicting files. Kept both intents: `GameAction`
+  now carries his `undo(state)` **and** our JSON and elimination ledger, and the engine
+  delegates to it; settings keeps the four sections plus his spacing slider; his layout
+  preview screen replaces our inline preview; the import service keeps his parser but not
+  the dead `sharePuzzle`; `HomeScreen` stays stateful for the first-run theme sheet.
+  Verified: `flutter analyze` clean, 154 tests pass, web release build green.
 - No upstream PRs, issues or Discussions are open from us. PR #11 is closed.
 - Fork `main` was fast-forwarded to `upstream/main` (`fa47319`) on 2026-11-05. No tags
   were pushed.
