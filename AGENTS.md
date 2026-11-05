@@ -78,8 +78,9 @@ settings redesign (slices 008–011) and is the active one.
 - When the coach finds no step it offers an AI hand-off through the existing
   export sheet. The coach must cover every technique the app's own solver can
   apply, enforced by a coverage test. Turbot Fish is covered by the coach's own
-  Skyscraper and Two-String Kite, not by the upstream `TurbotFish`, which can
-  target a pattern cell.
+  Skyscraper and Two-String Kite rather than by the upstream `TurbotFish`. The
+  upstream class is sound (see `docs/upstream-contribution.md`, "Turbot Fish
+  retracted"); the coach just does not delegate to it.
 - The home screen shows a resume card for the most recent save, and the
   difficulty selector remembers the last played difficulty.
 - X-Chains and XY-Chains are out of scope for now.

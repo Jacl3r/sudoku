@@ -120,11 +120,46 @@ Order matters; each step needs its own consent.
 
 | # | Piece | Branch (off `upstream/main`) | Notes |
 |---|---|---|---|
-| 0 | Ask first | none (a Discussion) | Short note, screenshots, no code. Offer export and the Turbot Fish fix. Say no is fine. |
-| 1 | Export sheet | `feat/export-puzzle` | He called it simple. Keep the sheet minimal: copy puzzle / progress, optional AI prompt. Decide on the Android share channel separately (platform code is more to review). Check against his v1.2.0 undo/`GameAction` refactor. |
-| 2 | Turbot Fish fix | `fix/turbot-fish-pattern-cells` | `TurbotFish` can eliminate from a pattern cell, which can corrupt the stored solution and difficulty rating. Small fix plus regression test. Best candidate for a first PR. |
+| 0 | Ask first | none (a Discussion) | Short note and screenshots, no code in it. Draft: `docs/upstream-draft-discussion.md`. Say no is fine. |
+| 1 | Export sheet | `feat/export-puzzle` (`8ccc9c5`) | Built and pushed to the fork. Copy-only, three contents, three formats, optional AI prompt, entry in the Hints sheet. No share channel, no link format, no remembered choice. |
+| 2 | Turbot Fish fix | none | **Retracted, see below.** Branch deleted. |
 | 3 | Coach | only if he says yes | He dropped a hint system as too complex. A lighter, opt-in version at most. |
-| – | Not for upstream | never | Home/settings redesign, resume card, import library, first-run theme sheet, fork CI and ids. |
+| 4 | Later, small, unevaluated | `feat/...` | Keyboard shortcuts (his `Focus` handler only knows arrows, digits and `p`); persisted undo (touches his own `GameAction` refactor, so ask first). |
+| – | Not for upstream | never | Home/settings redesign, resume card, import library, first-run theme sheet, same-digit highlight change, fork CI and ids. |
+
+### Map
+
+```mermaid
+gitGraph
+  commit id: "v1.1.0 403bbfc"
+  branch coach-and-export
+  commit id: "coach, export, redesign"
+  commit id: "slices 012-014, docs"
+  branch multiplayer
+  commit id: "co-op plan (docs only)"
+  checkout main
+  commit id: "upstream v1.2.0 fa47319"
+  branch feat/export-puzzle
+  commit id: "export sheet 8ccc9c5"
+```
+
+| Branch | Based on | Role | Goes upstream? |
+|---|---|---|---|
+| `main` | `upstream/main` | Mirror, fast-forward only | n/a |
+| `coach-and-export` | `v1.1.0` | Personal daily driver | Never as a whole |
+| `multiplayer` | `coach-and-export` | Private experiment | Never |
+| `feat/export-puzzle` | `upstream/main` | Candidate PR piece 1 | Only with consent |
+
+### Turbot Fish retracted
+
+I earlier proposed `fix/turbot-fish-pattern-cells` and said upstream's `TurbotFish` could
+corrupt solutions. That was wrong. In a Turbot Fish one of the two tips must hold the
+digit, because if neither did, both base cells would, and they share a unit. So any cell
+seeing both tips can lose the digit, base cells included, and upstream's code is sound.
+Measured on 56,057 random consistent positions: 0 wrong eliminations from the original;
+the "fixed" version found nothing on 56% of positions where the original fired. The
+regression test only passes on a synthetic board that is itself contradictory. Nothing
+was sent upstream. The fix remains in `coach-and-export` as a harmless conservative skip.
 
 ## State at 2026-11-05
 
@@ -137,7 +172,9 @@ Order matters; each step needs its own consent.
 - No upstream PRs, issues or Discussions are open from us. PR #11 is closed.
 - Fork `main` was fast-forwarded to `upstream/main` (`fa47319`) on 2026-11-05. No tags
   were pushed.
-- `fix/turbot-fish-pattern-cells` (`67dd24b`, one commit off `upstream/main`, +33/-2)
-  is pushed to the fork only. Regression test fails on upstream code and passes with
-  the fix; `dart format`, `dart fix`, `flutter analyze` clean; 109 tests pass. No PR
-  has been opened and none will be without consent (rule 1).
+- `fix/turbot-fish-pattern-cells` was created and pushed to the fork, then retracted and
+  deleted the same day (see above).
+- `feat/export-puzzle` (`8ccc9c5`, one commit off `upstream/main`) is pushed to the fork
+  only. `dart format`, `dart fix`, `flutter analyze` clean, 116 tests pass, web release
+  build green. **Not yet looked at on screen or on a phone.** Screenshots are still
+  needed. No PR has been opened and none will be without consent (rule 1).

@@ -57,13 +57,15 @@ a synthetic candidate board before it was fixed.
    without clearing it. Paste B after A, press Start, and A was imported. Now any edit or
    file pick invalidates the checked puzzle, its detected difficulty and its error, and the
    button reads **Check** because that is what it does.
-2. **The upstream `TurbotFish` could eliminate a candidate from a pattern cell.** It treated
-   every cell as a target and skipped only the two tips. Because `solveLogically` then falls
-   back to a brute force constrained by candidates, a wrong elimination could leave
-   `solvedGrid` unsolved — and that result supplies the stored solution and detected
-   difficulty for imports, and the difficulty rating for generated puzzles. It now skips
-   all four pattern cells; a regression test pins the case where the only cells seeing both
-   tips are pattern cells.
+2. **RETRACTED (2026-11-05): this was not a bug.** The upstream `TurbotFish` treats every
+   cell except the two tips as a target. That is sound: one of the two tips must hold the
+   digit (if neither did, both base cells would, and they share a unit), so any cell that
+   sees both tips, a base cell included, can lose it. Checked on 56,057 random consistent
+   positions: 0 wrong eliminations. The "fix" below only made the technique weaker (on 56%
+   of those positions where the original fired, the fixed one found nothing). It skips all
+   four pattern cells; the regression test passes only on a synthetic board that is itself
+   contradictory. It stays in this fork as a harmless conservative skip and must not go
+   upstream. Original (wrong) rationale: a wrong elimination could corrupt `solvedGrid`.
 3. **Appearance had no theme swatches.** The palette was still only an app-bar icon.
    Appearance now shows the built-in swatches inline, and the settings app bar no longer
    carries `ThemeSelector`. It stays on the game screen, where a quick switch is useful.

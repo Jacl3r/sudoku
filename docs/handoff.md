@@ -136,8 +136,10 @@ carry the history, and the tree was tested as a whole.
 - **Coach soundness** is enforced two ways: a brute-force oracle over synthetic candidate
   boards, and a coverage test that walks the solver's path. The oracle is gated to positions
   with ≤45 empty cells because refuting a digit on an empty board is expensive.
-- **Turbot Fish** in `lib/domain/engine/techniques/` used to target pattern cells; fixed in
-  007 with a regression test.
+- **Turbot Fish**: slice 007 "fixed" it to skip pattern cells, but that was not a bug. Any
+  cell that sees both tips can lose the digit, base cells included, and the only board
+  where the old code differed is a contradictory one. The skip is merely conservative and
+  stays here; it must not go upstream. See `docs/upstream-contribution.md`.
 - **Grid sizing** is a heuristic in `grid_widget.dart`: 220 px is the pad/actions budget, and
   in portrait the grid now shrinks rather than falling back to the screen width.
 - The `startup` flow shows the theme sheet from a post-frame callback in `HomeScreen`; the
