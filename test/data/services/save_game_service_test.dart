@@ -55,16 +55,14 @@ void main() {
 
     // Everything the player had survives the round trip.
     final notes = List<Set<int>>.generate(81, (_) => <int>{})..[3] = {1, 2};
-    final eliminations = List<Set<int>>.generate(81, (_) => <int>{})
-      ..[4] = {5};
+    final eliminations = List<Set<int>>.generate(81, (_) => <int>{})..[4] = {5};
     await service.save(
-      GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert)
-          .copyWith(
-            elapsed: const Duration(minutes: 12),
-            notes: notes,
-            coachEliminations: eliminations,
-            assists: const GameAssists(hints: true),
-          ),
+      GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert).copyWith(
+        elapsed: const Duration(minutes: 12),
+        notes: notes,
+        coachEliminations: eliminations,
+        assists: const GameAssists(hints: true),
+      ),
     );
     final loaded = service.load(Difficulty.expert)!;
     expect(loaded.elapsed, const Duration(minutes: 12));
@@ -104,7 +102,10 @@ void main() {
     expect(library.length, 2);
     expect(library.first.id, two.id, reason: 'newest first');
     expect(library.last.id, one.id);
-    expect(service.loadImport(one.id)!.state.elapsed, const Duration(minutes: 1));
+    expect(
+      service.loadImport(one.id)!.state.elapsed,
+      const Duration(minutes: 1),
+    );
 
     // Saving an import updates the marker and the index timestamp.
     expect(game.get(SaveGameService.lastPlayedKey), importKey(two.id));
@@ -121,12 +122,13 @@ void main() {
 
   test('undo survives a save round trip', () async {
     final service = SaveGameService();
-    final engine = GameEngine(
-      GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
-    )
-      ..inputDigit(2, 4)
-      ..toggleNote(3, 7)
-      ..inputDigit(10, 1);
+    final engine =
+        GameEngine(
+            GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
+          )
+          ..inputDigit(2, 4)
+          ..toggleNote(3, 7)
+          ..inputDigit(10, 1);
 
     await service.save(engine.currentState);
 
@@ -155,11 +157,12 @@ void main() {
         2: {5},
       },
     );
-    final engine = GameEngine(
-      GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
-    )
-      ..toggleNote(2, 5)
-      ..applyCoachStep(step);
+    final engine =
+        GameEngine(
+            GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
+          )
+          ..toggleNote(2, 5)
+          ..applyCoachStep(step);
 
     expect(engine.currentState.notes[2], isEmpty);
     expect(engine.currentState.coachEliminationsAt(2), {5});

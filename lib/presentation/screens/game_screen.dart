@@ -17,9 +17,10 @@ import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 import 'package:sudoku/providers/stats_provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class GameScreen extends ConsumerWidget {
-  const GameScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,7 +107,8 @@ class GameScreen extends ConsumerWidget {
 
                     switch (key) {
                       case .backspace || .delete || .keyX:
-                        gameNotifier.erase();
+                        final cell = board.selectedCell;
+                        if (cell != null) gameNotifier.erase(cell);
                         return .handled;
                       case .keyN || .keyP:
                         boardNotifier.toggleInputMode();
@@ -130,7 +132,11 @@ class GameScreen extends ConsumerWidget {
                       final d = int.tryParse(key.keyLabel);
                       if (d != null && d >= 1 && d <= 9) {
                         if (board.selectedCell != null) {
-                          gameNotifier.inputDigit(board.selectedCell!, d);
+                          gameNotifier.inputDigit(
+                            board.selectedCell!,
+                            d,
+                            inputMode: board.inputMode,
+                          );
                         } else {
                           boardNotifier.selectDigit(d);
                         }
@@ -190,7 +196,7 @@ class GameScreen extends ConsumerWidget {
 }
 
 class _GameBody extends ConsumerStatefulWidget {
-  const _GameBody({required this.state});
+  const new({required this.state});
   final GameState state;
 
   @override
@@ -203,11 +209,13 @@ class _GameBodyState extends ConsumerState<_GameBody>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WakelockPlus.enable();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    WakelockPlus.disable();
     super.dispose();
   }
 

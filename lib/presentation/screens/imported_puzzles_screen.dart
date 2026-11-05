@@ -12,7 +12,7 @@ import 'package:sudoku/providers/services_provider.dart';
 /// Puzzles imported from outside the app, kept separately from the difficulty
 /// slots so they can be worked on in parallel.
 class ImportedPuzzlesScreen extends ConsumerWidget {
-  const ImportedPuzzlesScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +63,7 @@ class ImportedPuzzlesScreen extends ConsumerWidget {
 }
 
 class _ImportedRow extends ConsumerWidget {
-  const _ImportedRow({required this.game});
+  const new({required this.game});
 
   final ImportedGame game;
 
@@ -82,9 +82,8 @@ class _ImportedRow extends ConsumerWidget {
       onTap: () {
         ref.read(difficultyProvider.notifier).set(game.state.difficulty);
         ref.read(activeSaveKeyProvider.notifier).set(game.key);
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const GameScreen()),
-        );
+        Navigator.of(context)
+            .push(MaterialPageRoute<void>(builder: (_) => const GameScreen()));
       },
       trailing: PopupMenuButton<String>(
         tooltip: 'More',

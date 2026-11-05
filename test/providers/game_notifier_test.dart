@@ -22,7 +22,7 @@ Future<void> pumpGame(ProviderContainer container) async {
 }
 
 class FakeSettingsNotifier extends SettingsNotifier {
-  FakeSettingsNotifier(this._settings);
+  new(this._settings);
   final AppSettings _settings;
 
   @override
@@ -30,7 +30,7 @@ class FakeSettingsNotifier extends SettingsNotifier {
 }
 
 class _FakeActiveKey extends ActiveSaveKeyNotifier {
-  _FakeActiveKey(this._value);
+  new(this._value);
   final String? _value;
 
   @override
@@ -178,7 +178,7 @@ void main() {
         await pumpGame(container);
 
         container.read(gameProvider.notifier)
-          ..inputDigit(2, 4)
+          ..inputDigit(2, 4, inputMode: .number)
           ..restart();
 
         expect(readState(container).grid.valueAt(2), 0);
@@ -188,7 +188,7 @@ void main() {
         await pumpGame(container);
 
         container.read(gameProvider.notifier)
-          ..inputDigit(2, 4)
+          ..inputDigit(2, 4, inputMode: .number)
           ..restart();
 
         expect(readState(container).history, isEmpty);
@@ -209,7 +209,9 @@ void main() {
       test('number mode writes grid value', () async {
         await pumpGame(container);
 
-        container.read(gameProvider.notifier).inputDigit(2, 4);
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(2, 4, inputMode: .number);
 
         expect(readState(container).grid.valueAt(2), 4);
       });
@@ -219,7 +221,9 @@ void main() {
 
         container.read(boardProvider.notifier).toggleInputMode();
 
-        container.read(gameProvider.notifier).inputDigit(2, 4);
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(2, 4, inputMode: .pencil);
 
         final state = readState(container);
         expect(state.notes[2], contains(4));
@@ -232,43 +236,40 @@ void main() {
         await pumpGame(container);
 
         container.read(boardProvider.notifier).toggleInputMode();
-        container.read(gameProvider.notifier).inputDigit(5, 4);
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(5, 4, inputMode: .pencil);
         container.read(boardProvider.notifier).toggleInputMode();
-        container.read(gameProvider.notifier).inputDigit(2, 4);
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(2, 4, inputMode: .number);
 
         expect(readState(container).notes[5], isNot(contains(4)));
       });
     });
 
     group('erase', () {
-      test('erases selected cell when no index passed', () async {
+      test('erases the given cell index', () async {
+        await pumpGame(container);
+
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(2, 4, inputMode: .number);
+        container.read(gameProvider.notifier).erase(2);
+
+        expect(readState(container).grid.valueAt(2), 0);
+      });
+
+      test('erases the currently selected cell', () async {
         await pumpGame(container);
 
         container.read(boardProvider.notifier).selectCell(2);
-        container.read(gameProvider.notifier).inputDigit(2, 4);
-
-        container.read(gameProvider.notifier).erase();
-
-        expect(readState(container).grid.valueAt(2), 0);
-      });
-
-      test('erases specific index when passed', () async {
-        await pumpGame(container);
-
-        container.read(gameProvider.notifier)
-          ..inputDigit(2, 4)
-          ..erase(2);
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(2, 4, inputMode: .number);
+        container.read(gameProvider.notifier).erase(2);
 
         expect(readState(container).grid.valueAt(2), 0);
-      });
-
-      test('no-op when no cell selected and no index passed', () async {
-        await pumpGame(container);
-
-        // No selectCell call, no index — should not throw
-        container.read(gameProvider.notifier).erase();
-
-        expect(readState(container).history, isEmpty);
       });
     });
 
@@ -281,7 +282,7 @@ void main() {
         final wrong = correct == 9 ? 1 : correct + 1;
 
         container.read(gameProvider.notifier)
-          ..inputDigit(2, wrong)
+          ..inputDigit(2, wrong, inputMode: .number)
           ..runValidation();
 
         expect(container.read(boardProvider).errorCells, contains(2));
@@ -314,7 +315,9 @@ void main() {
       test('true after action', () async {
         await pumpGame(container);
 
-        container.read(gameProvider.notifier).inputDigit(2, 4);
+        container
+            .read(gameProvider.notifier)
+            .inputDigit(2, 4, inputMode: .number);
 
         expect(container.read(gameProvider.notifier).canUndo, isTrue);
       });
@@ -323,7 +326,7 @@ void main() {
         await pumpGame(container);
 
         container.read(gameProvider.notifier)
-          ..inputDigit(2, 4)
+          ..inputDigit(2, 4, inputMode: .number)
           ..undo();
 
         expect(container.read(gameProvider.notifier).canUndo, isFalse);

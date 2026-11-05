@@ -4,24 +4,88 @@ import 'package:sudoku/presentation/models/app_settings.dart';
 import 'package:sudoku/presentation/models/theme_config.dart';
 import 'package:sudoku/presentation/screens/about_screen.dart';
 import 'package:sudoku/presentation/screens/custom_colors_screen.dart';
+import 'package:sudoku/presentation/screens/preview_overlay.dart';
 import 'package:sudoku/presentation/widgets/game_preview.dart';
 import 'package:sudoku/presentation/widgets/notes_grid.dart';
 import 'package:sudoku/presentation/widgets/theme_swatch.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 import 'package:sudoku/providers/theme_provider.dart';
 
-class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends ConsumerStatefulWidget {
+  const new({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final PreviewOverlay _previewOverlay = PreviewOverlay();
+  final ValueNotifier<double> _previewFraction = ValueNotifier(1);
+  double? _dragFraction;
+
+  @override
+  void dispose() {
+    _previewOverlay.hide();
+    _previewFraction.dispose();
+    super.dispose();
+  }
+
+  void _showLayoutPreview() {
+    if (_previewOverlay.visible) return;
+    _previewOverlay.show(
+      context,
+      (_) => ValueListenableBuilder<double>(
+        valueListenable: _previewFraction,
+        builder: (_, fraction, _) =>
+            GamePreviewScreen(gridTopSpacingFraction: fraction),
+      ),
+    );
+  }
+
+  void _onGridSpacingDragStart(double value) {
+    setState(() => _dragFraction = value);
+    _previewFraction.value = value;
+    _showLayoutPreview();
+  }
+
+  void _onGridSpacingDrag(double value) {
+    setState(() => _dragFraction = value);
+    _previewFraction.value = value;
+    _showLayoutPreview();
+  }
+
+  void _onGridSpacingDragEnd(double value) {
+    setState(() => _dragFraction = null);
+    _previewOverlay.hide();
+    ref
+        .read(settingsProvider.notifier)
+        .update((s) => s.copyWith(gridTopSpacingFraction: value));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = ref.watch(settingsProvider);
     final themeConfig = ref.watch(themeConfigProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final gridSpacingFraction =
+        (_dragFraction ?? settings.gridTopSpacingFraction).clamp(0.0, 1.0);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        actions: [
+          IconButton(
+            tooltip: 'Game layout preview',
+            icon: const Icon(Icons.visibility_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GamePreviewScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const .only(bottom: 48),
         child: Center(
@@ -82,9 +146,33 @@ class SettingsScreen extends ConsumerWidget {
                 ),
 
                 const _SectionHeader('Board'),
+                Padding(
+                  padding: const .all(12),
+                  child: Column(
+                    crossAxisAlignment: .start,
+                    children: [
+                      Text(
+                        'Grid top spacing (portrait)',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: .bold,
+                        ),
+                      ),
+                      Slider(
+                        value: gridSpacingFraction,
+                        label: '${(gridSpacingFraction * 100).round()}%',
+                        onChangeStart: _onGridSpacingDragStart,
+                        onChanged: _onGridSpacingDrag,
+                        onChangeEnd: _onGridSpacingDragEnd,
+                      ),
+                    ],
+                  ),
+                ),
                 SwitchListTile(
                   title: const Text('Mask given cells'),
-                  subtitle: const Text('Dim the digits the puzzle started with'),
+                  subtitle: const Text(
+                    'Dim the digits the puzzle started with',
+                  ),
                   value: settings.maskGivenCells,
                   contentPadding: const .symmetric(horizontal: 12),
                   onChanged: (v) async {
@@ -115,19 +203,6 @@ class SettingsScreen extends ConsumerWidget {
                     );
                   },
                 ),
-                Padding(
-                  padding: const .all(12),
-                  child: Center(
-                    child: GamePreview(
-                      showRemainingCounts: settings.showRemainingCounts,
-                      maskGivenCells: settings.maskGivenCells,
-                      highlightSameDigits: settings.highlightSameDigits,
-                      notesLayout: settings.notesLayout,
-                      removeAnimations: settings.removeAnimations,
-                    ),
-                  ),
-                ),
-
                 const _SectionHeader('Notes'),
                 Padding(
                   padding: const .all(12),
@@ -149,9 +224,8 @@ class SettingsScreen extends ConsumerWidget {
                               selected: {settings.notesLayout},
                               onSelectionChanged: (selection) {
                                 notifier.update(
-                                  (s) => s.copyWith(
-                                    notesLayout: selection.first,
-                                  ),
+                                  (s) =>
+                                      s.copyWith(notesLayout: selection.first),
                                 );
                               },
                             ),
@@ -230,7 +304,7 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+  const new(this.title);
 
   final String title;
 
@@ -272,7 +346,7 @@ String _variantDescription(DynamicSchemeVariant variant) => switch (variant) {
 
 /// One row per scheme variant, each showing the colours it would produce.
 class _VariantPicker extends StatelessWidget {
-  const _VariantPicker({
+  const new({
     required this.selected,
     required this.seed,
     required this.brightness,
@@ -318,7 +392,7 @@ class _VariantPicker extends StatelessWidget {
 }
 
 class _VariantOption extends StatelessWidget {
-  const _VariantOption({
+  const new({
     required this.variant,
     required this.selected,
     required this.scheme,
@@ -373,7 +447,7 @@ class _VariantOption extends StatelessWidget {
 
 /// Two empty cells rendered with each notes layout, so the choice is visible.
 class _NotesLayoutDemo extends StatelessWidget {
-  const _NotesLayoutDemo({required this.selected});
+  const new({required this.selected});
 
   final NotesLayout selected;
 

@@ -27,7 +27,7 @@ Future<void> showExportSheet(
 }
 
 class ExportSheet extends StatefulWidget {
-  const ExportSheet({
+  const new({
     required this.state,
     this.initialContent,
     this.initialFormat,

@@ -12,21 +12,16 @@ void main() {
       given: TestGrids.simplePuzzle(),
       solution: TestGrids.simpleSolution(),
     );
-    final base = GameState.newGame(
-      puzzle: puzzle,
-      difficulty: Difficulty.easy,
-    );
-    final empty = List.generate(81, (i) => i).firstWhere(
-      (i) => puzzle.given.valueAt(i) == 0,
-    );
+    final base = GameState.newGame(puzzle: puzzle, difficulty: Difficulty.easy);
+    final empty = List.generate(
+      81,
+      (i) => i,
+    ).firstWhere((i) => puzzle.given.valueAt(i) == 0);
 
     test('ignores the player notes', () {
       final noted = List<Set<int>>.generate(81, (_) => <int>{});
       noted[empty] = {2, 3};
-      expect(
-        coachBoardKey(base.copyWith(notes: noted)),
-        coachBoardKey(base),
-      );
+      expect(coachBoardKey(base.copyWith(notes: noted)), coachBoardKey(base));
     });
 
     test('changes when an elimination is recorded', () {
@@ -40,7 +35,10 @@ void main() {
 
     test('changes when a digit is placed', () {
       final grid = base.grid.clone()..setValue(empty, 4);
-      expect(coachBoardKey(base.copyWith(grid: grid)), isNot(coachBoardKey(base)));
+      expect(
+        coachBoardKey(base.copyWith(grid: grid)),
+        isNot(coachBoardKey(base)),
+      );
     });
   });
 }

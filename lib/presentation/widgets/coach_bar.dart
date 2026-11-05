@@ -17,7 +17,7 @@ double coachBarHeight(BuildContext context) {
 
 /// Small panel under the grid that reveals a hint step by step.
 class CoachBar extends ConsumerWidget {
-  const CoachBar({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,69 +111,69 @@ class CoachBar extends ConsumerWidget {
         child: SizedBox(
           height: coachBarHeight(context),
           child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHigh,
-            borderRadius: .circular(6),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 4, 8),
-            child: Column(
-              crossAxisAlignment: .start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: .bold,
-                          color: scheme.onSurfaceVariant,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: .circular(6),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 4, 8),
+              child: Column(
+                crossAxisAlignment: .start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: .bold,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      _StageDots(stage: step == null ? null : coach.stage),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        tooltip: 'Close',
+                        onPressed: notifier.close,
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const .only(right: 8),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: .start,
+                          spacing: 4,
+                          children: [
+                            Text(body, style: theme.textTheme.bodyMedium),
+                            if (detail != null) Text(detail, style: muted),
+                          ],
                         ),
                       ),
                     ),
-                    _StageDots(stage: step == null ? null : coach.stage),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      tooltip: 'Close',
-                      onPressed: notifier.close,
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const .only(right: 8),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: .start,
-                        spacing: 4,
-                        children: [
-                          Text(body, style: theme.textTheme.bodyMedium),
-                          if (detail != null) Text(detail, style: muted),
-                        ],
-                      ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const .only(top: 4, right: 4),
+                      child: action,
                     ),
                   ),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const .only(top: 4, right: 4),
-                    child: action,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
 }
 
 class _StageDots extends StatelessWidget {
-  const _StageDots({required this.stage});
+  const new({required this.stage});
 
   final CoachStage? stage;
 

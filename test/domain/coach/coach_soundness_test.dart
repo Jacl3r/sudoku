@@ -109,9 +109,7 @@ int _walkAndCheck(Difficulty difficulty) {
     final board = CoachBoard.fromState(values, [
       for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
     ]);
-    final candidates = [
-      for (var i = 0; i < 81; i++) board.digitsAt(i).toSet(),
-    ];
+    final candidates = [for (var i = 0; i < 81; i++) board.digitsAt(i).toSet()];
 
     // Early positions are nearly empty; proving a digit impossible there
     // costs far more than it is worth, and eliminations only start to
@@ -124,12 +122,7 @@ int _walkAndCheck(Difficulty difficulty) {
         step.eliminations.forEach((cell, digits) {
           for (final digit in digits) {
             expect(
-              _keepsCandidate(
-                values,
-                candidates,
-                cell: cell,
-                digit: digit,
-              ),
+              _keepsCandidate(values, candidates, cell: cell, digit: digit),
               isFalse,
               reason:
                   '${step.technique} removed $digit from '

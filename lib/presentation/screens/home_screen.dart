@@ -14,7 +14,7 @@ import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/theme_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  const new({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -57,9 +57,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     void openGame(String key, Difficulty difficulty) {
       ref.read(difficultyProvider.notifier).set(difficulty);
       ref.read(activeSaveKeyProvider.notifier).set(key);
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const GameScreen()),
-      );
+      Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => const GameScreen()));
     }
 
     Future<void> newGame(Difficulty difficulty) async {
@@ -129,10 +128,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton(
-                            onPressed: () => openGame(
-                              pageDifficulty.name,
-                              pageDifficulty,
-                            ),
+                            onPressed: () =>
+                                openGame(pageDifficulty.name, pageDifficulty),
                             child: const Text('Continue'),
                           ),
                         ),
@@ -198,7 +195,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 /// Five swipeable pages — the four difficulties and the import library — with
 /// chevrons and pips, both kept in step with [homePageProvider].
 class _DifficultyCarousel extends ConsumerStatefulWidget {
-  const _DifficultyCarousel();
+  const new();
 
   @override
   ConsumerState<_DifficultyCarousel> createState() =>
@@ -274,9 +271,7 @@ class _DifficultyCarouselState extends ConsumerState<_DifficultyCarousel> {
             ),
             IconButton(
               tooltip: 'Next',
-              onPressed: page < pageCount - 1
-                  ? () => _goTo(page + 1)
-                  : null,
+              onPressed: page < pageCount - 1 ? () => _goTo(page + 1) : null,
               icon: const Icon(Icons.chevron_right),
             ),
           ],
@@ -309,7 +304,7 @@ class _DifficultyCarouselState extends ConsumerState<_DifficultyCarousel> {
 }
 
 class _PageLabel extends StatelessWidget {
-  const _PageLabel({required this.title, this.subtitle});
+  const new({required this.title, this.subtitle});
 
   final String title;
   final String? subtitle;
@@ -338,7 +333,7 @@ class _PageLabel extends StatelessWidget {
 
 /// One tap back into the game saved most recently.
 class _ResumeCard extends StatelessWidget {
-  const _ResumeCard({required this.game, required this.onTap});
+  const new({required this.game, required this.onTap});
 
   final ResumableGame game;
   final VoidCallback onTap;

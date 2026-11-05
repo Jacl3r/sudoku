@@ -6,7 +6,7 @@ import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 
 class DigitPad extends ConsumerWidget {
-  const DigitPad({required this.state, super.key});
+  const new({required this.state, super.key});
 
   final GameState state;
 
@@ -34,7 +34,11 @@ class DigitPad extends ConsumerWidget {
             onTap: () {
               if (state.puzzleComplete) return;
               if (board.selectedCell != null) {
-                gameNotifier.inputDigit(board.selectedCell!, digit);
+                gameNotifier.inputDigit(
+                  board.selectedCell!,
+                  digit,
+                  inputMode: board.inputMode,
+                );
               } else {
                 boardNotifier.selectDigit(digit);
               }
@@ -46,7 +50,13 @@ class DigitPad extends ConsumerWidget {
             active: false,
             count: 9,
             showCount: false,
-            onTap: gameNotifier.erase,
+            onTap: () {
+              if (state.puzzleComplete) return;
+              final cell = board.selectedCell;
+              if (cell != null) {
+                gameNotifier.erase(cell);
+              }
+            },
           ),
         );
 
@@ -65,7 +75,7 @@ class DigitPad extends ConsumerWidget {
 }
 
 class DigitButton extends StatelessWidget {
-  const DigitButton({
+  const new({
     required this.digit,
     required this.active,
     required this.count,

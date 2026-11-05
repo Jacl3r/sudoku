@@ -35,7 +35,7 @@ TextStyle _noteStyle(
 }
 
 class NotesGrid extends StatelessWidget {
-  const NotesGrid({
+  const new({
     required this.notes,
     required this.cellSize,
     super.key,
@@ -100,7 +100,7 @@ class NotesGrid extends StatelessWidget {
 }
 
 class _NotesRow extends StatelessWidget {
-  const _NotesRow({required this.digits, required this.style});
+  const new({required this.digits, required this.style});
 
   final List<int> digits;
   final TextStyle Function(int digit) style;
@@ -122,7 +122,7 @@ class _NotesRow extends StatelessWidget {
 }
 
 class FixedNotesGrid extends StatelessWidget {
-  const FixedNotesGrid({
+  const new({
     required this.notes,
     required this.cellSize,
     super.key,

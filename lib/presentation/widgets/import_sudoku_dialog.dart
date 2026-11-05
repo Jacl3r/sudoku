@@ -1,7 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:sudoku/domain/engine/game_utils.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/presentation/screens/game_screen.dart';
@@ -10,7 +9,7 @@ import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 
 class ImportSudokuDialog extends ConsumerStatefulWidget {
-  const ImportSudokuDialog({super.key});
+  const new({super.key});
 
   @override
   ConsumerState<ImportSudokuDialog> createState() => _ImportSudokuState();
@@ -65,8 +64,7 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
               maxLines: 4,
               onChanged: (_) => _invalidate(),
               decoration: InputDecoration(
-                hintText:
-                    'Paste 81-digit puzzle here. The gaps can be `0`, `.`, `x`, `X`, `_`',
+                hintText: 'Paste 81-digit puzzle here. The gaps can be `0`, `.`, `x`, `X`, `_`',
                 border: const OutlineInputBorder(),
                 errorText: errorText,
                 errorMaxLines: 4,
@@ -127,9 +125,8 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
             if (raw.isEmpty) return;
 
             try {
-              final puzzleString = parsePuzzleInput(raw);
               final service = ref.read(puzzleImportServiceProvider);
-              final state = await service.loadPuzzleIntoGame(puzzleString);
+              final state = await service.importPuzzle(raw);
               setState(() {
                 computedDifficulty = state.difficulty;
                 validPuzzle = state;

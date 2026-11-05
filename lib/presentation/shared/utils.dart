@@ -24,7 +24,9 @@ String formatDate(DateTime date) {
 /// True where a hardware keyboard is the primary input, so advertising a key
 /// is useful. On web this resolves to the host OS, which is what we want.
 bool get showKeyboardHints => switch (defaultTargetPlatform) {
-  TargetPlatform.macOS || TargetPlatform.windows || TargetPlatform.linux => true,
+  TargetPlatform.macOS ||
+  TargetPlatform.windows ||
+  TargetPlatform.linux => true,
   _ => false,
 };
 

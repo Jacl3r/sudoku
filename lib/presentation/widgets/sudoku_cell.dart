@@ -4,7 +4,7 @@ import 'package:sudoku/presentation/widgets/notes_grid.dart';
 import 'package:sudoku/providers/coach_provider.dart';
 
 class SudokuCell extends StatelessWidget {
-  const SudokuCell({
+  const new({
     required this.index,
     required this.size,
     required this.value,

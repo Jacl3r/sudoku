@@ -6,7 +6,7 @@ import 'package:sudoku/domain/models/game_action.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 
 class GameEngine {
-  GameEngine(this._initialState) {
+  new(this._initialState) {
     _state = _initialState;
   }
 
@@ -139,65 +139,7 @@ class GameEngine {
 
   void undo() {
     if (!canUndo) return;
-    final action = _state.history.last;
-    final trimmed = _state.history.sublist(0, _state.history.length - 1);
-
-    switch (action) {
-      case DigitAction():
-        final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
-        action.previousNotes.forEach((i, notes) {
-          newNotes[i] = Set<int>.from(notes);
-        });
-        final grid = _state.grid.clone()
-          ..setValue(action.cellIndex, action.previousValue);
-        _state = _state.copyWith(
-          grid: grid,
-          notes: newNotes,
-          coachEliminations: _copyEliminations(
-            action.previousCoachEliminations,
-          ),
-          history: trimmed,
-        );
-      case PencilAction():
-        final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
-        newNotes[action.cellIndex] = Set<int>.from(action.previousNotes);
-        final grid = _state.grid.clone()
-          ..setValue(action.cellIndex, action.previousValue);
-        _state = _state.copyWith(
-          grid: grid,
-          notes: newNotes,
-          coachEliminations: _copyEliminations(
-            action.previousCoachEliminations,
-          ),
-          history: trimmed,
-        );
-      case EraseAction():
-        final newNotes = List<Set<int>>.from(_state.notes.map(Set<int>.from));
-        newNotes[action.cellIndex] = Set<int>.from(action.previousNotes);
-        final grid = _state.grid.clone()
-          ..setValue(action.cellIndex, action.previousValue);
-        _state = _state.copyWith(
-          grid: grid,
-          notes: newNotes,
-          coachEliminations: _copyEliminations(
-            action.previousCoachEliminations,
-          ),
-          history: trimmed,
-        );
-      case CoachNotesAction():
-        _state = _state.copyWith(
-          notes: action.previousNotes.map(Set<int>.from).toList(),
-          coachEliminations: _copyEliminations(
-            action.previousCoachEliminations,
-          ),
-          history: trimmed,
-        );
-      case AutoNotesAction():
-        _state = _state.copyWith(
-          notes: action.previousNotes.map(Set<int>.from).toList(),
-          history: trimmed,
-        );
-    }
+    _state = _state.history.last.undo(_state);
   }
 
   void revealHint({bool autoRemoveNotes = false}) {
@@ -275,12 +217,6 @@ class GameEngine {
     81,
     (i) => Set<int>.from(_state.coachEliminationsAt(i)),
   );
-
-  static List<Set<int>> _copyEliminations(List<Set<int>> source) =>
-      List<Set<int>>.generate(
-        81,
-        (i) => i < source.length ? Set<int>.from(source[i]) : <int>{},
-      );
 
   static bool _sameNotes(List<Set<int>> a, List<Set<int>> b) {
     if (a.length != b.length) return false;

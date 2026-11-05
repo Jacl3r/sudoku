@@ -7,7 +7,7 @@ import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/domain/models/imported_game.dart';
 
 class SaveGameService {
-  SaveGameService() : _box = Hive.box(gameBox);
+  new() : _box = Hive.box(gameBox);
 
   /// Box key naming the game saved most recently: a difficulty name or an
   /// `import:<id>` key.

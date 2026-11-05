@@ -51,41 +51,42 @@ void main() {
     List<Set<int>> ledger(int cell, Set<int> digits) =>
         List<Set<int>>.generate(81, (_) => <int>{})..[cell] = digits;
 
-    GameState stateWithHistory() => GameState.newGame(
-      puzzle: puzzle,
-      difficulty: Difficulty.expert,
-    ).copyWith(
-      history: [
-        DigitAction(
-          cellIndex: 2,
-          previousValue: 0,
-          newValue: 4,
-          previousNotes: {
-            2: {1, 9},
-            10: {},
-          },
-          previousCoachEliminations: ledger(5, {7}),
-        ),
-        const PencilAction(
-          cellIndex: 3,
-          previousNotes: {1, 2},
-          newNotes: {1, 2, 6},
-          previousValue: 0,
-        ),
-        const EraseAction(
-          cellIndex: 10,
-          previousValue: 3,
-          previousNotes: {3, 4},
-        ),
-        AutoNotesAction(
-          previousNotes: List.generate(81, (_) => <int>{})..[3] = {1, 5},
-        ),
-        CoachNotesAction(
-          previousNotes: List.generate(81, (_) => <int>{}),
-          previousCoachEliminations: ledger(7, {2, 8}),
-        ),
-      ],
-    );
+    GameState stateWithHistory() =>
+        GameState.newGame(
+          puzzle: puzzle,
+          difficulty: Difficulty.expert,
+        ).copyWith(
+          history: [
+            DigitAction(
+              cellIndex: 2,
+              previousValue: 0,
+              newValue: 4,
+              previousNotes: {
+                2: {1, 9},
+                10: {},
+              },
+              previousCoachEliminations: ledger(5, {7}),
+            ),
+            const PencilAction(
+              cellIndex: 3,
+              previousNotes: {1, 2},
+              newNotes: {1, 2, 6},
+              previousValue: 0,
+            ),
+            const EraseAction(
+              cellIndex: 10,
+              previousValue: 3,
+              previousNotes: {3, 4},
+            ),
+            AutoNotesAction(
+              previousNotes: List.generate(81, (_) => <int>{})..[3] = {1, 5},
+            ),
+            CoachNotesAction(
+              previousNotes: List.generate(81, (_) => <int>{}),
+              previousCoachEliminations: ledger(7, {2, 8}),
+            ),
+          ],
+        );
 
     Map<String, dynamic> encoded(GameState state) =>
         jsonDecode(jsonEncode(state.toJson())) as Map<String, dynamic>;
@@ -116,10 +117,7 @@ void main() {
         previousCoachEliminations: snapshots,
       );
 
-      expect(
-        action(emptyLedger).toJson().containsKey('eliminations'),
-        isFalse,
-      );
+      expect(action(emptyLedger).toJson().containsKey('eliminations'), isFalse);
       expect(action(const []).toJson().containsKey('eliminations'), isFalse);
 
       final encodedLedger = action(ledger(5, {7})).toJson()['eliminations'];

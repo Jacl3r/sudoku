@@ -6,7 +6,7 @@ import 'package:sudoku/providers/theme_provider.dart';
 /// Shown once on first launch so the palettes are discoverable when they
 /// matter, instead of living permanently on the home screen.
 class ThemeOnboardingSheet extends StatelessWidget {
-  const ThemeOnboardingSheet({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +50,7 @@ class ThemeOnboardingSheet extends StatelessWidget {
 }
 
 class _ThemeOption extends ConsumerWidget {
-  const _ThemeOption({required this.config});
+  const new({required this.config});
 
   final ThemeConfig config;
 
@@ -85,10 +85,7 @@ class _ThemeOption extends ConsumerWidget {
           child: Container(
             width: 24,
             height: 24,
-            decoration: BoxDecoration(
-              color: scheme.primary,
-              shape: .circle,
-            ),
+            decoration: BoxDecoration(color: scheme.primary, shape: .circle),
           ),
         ),
       ),

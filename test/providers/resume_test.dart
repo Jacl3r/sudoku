@@ -9,7 +9,7 @@ import 'package:sudoku/providers/services_provider.dart';
 import '../helpers/sudoku_grids.dart';
 
 class _FakeLastPlayed extends LastPlayedNotifier {
-  _FakeLastPlayed(this._value);
+  new(this._value);
 
   final String? _value;
 
@@ -18,7 +18,7 @@ class _FakeLastPlayed extends LastPlayedNotifier {
 }
 
 class _FakeContinueGames extends ContinueGameNotifier {
-  _FakeContinueGames(this._value);
+  new(this._value);
 
   final Map<Difficulty, GameState?> _value;
 
@@ -27,7 +27,7 @@ class _FakeContinueGames extends ContinueGameNotifier {
 }
 
 class _FakeImports extends ImportedGamesNotifier {
-  _FakeImports(this._value);
+  new(this._value);
 
   final List<ImportedGame> _value;
 
@@ -47,9 +47,9 @@ void main() {
         difficulty: difficulty,
       ).copyWith(elapsed: elapsed);
 
-  GameState completed(Difficulty difficulty) => game(
-    difficulty,
-  ).copyWith(grid: puzzle.solution.clone(), puzzleComplete: true);
+  GameState completed(Difficulty difficulty) =>
+      game(difficulty)
+          .copyWith(grid: puzzle.solution.clone(), puzzleComplete: true);
 
   ImportedGame imported(GameState state, {String id = '1'}) =>
       ImportedGame(id: id, state: state, savedAt: DateTime(2026, 11, 3));

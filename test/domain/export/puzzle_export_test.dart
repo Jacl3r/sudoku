@@ -75,10 +75,7 @@ void main() {
     });
 
     test('a completed board gets a completion prompt', () {
-      final solved = List<int>.generate(
-        81,
-        (i) => ((i ~/ 9 + i % 9) % 9) + 1,
-      );
+      final solved = List<int>.generate(81, (i) => ((i ~/ 9 + i % 9) % 9) + 1);
       final done = PuzzleExport(
         values: solved,
         givens: solved,

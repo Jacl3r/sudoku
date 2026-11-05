@@ -1,3 +1,4 @@
+import 'package:sudoku/data/utils/puzzle_parser.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
 import 'package:sudoku/domain/engine/solver.dart';
 import 'package:sudoku/domain/models/game_state.dart';
@@ -5,6 +6,14 @@ import 'package:sudoku/domain/models/puzzle.dart';
 import 'package:sudoku/domain/models/sudoku_grid.dart';
 
 class PuzzleImportService {
+  new({this.parser = const PuzzleParser()});
+
+  final PuzzleParser parser;
+
+  Future<GameState> importPuzzle(String raw) async {
+    return loadPuzzleIntoGame(parser.parse(raw));
+  }
+
   Future<GameState> loadPuzzleIntoGame(String puzzleString) async {
     final given = SudokuGrid.fromString(puzzleString);
     if (!hasUniqueSolution(given)) {

@@ -12,11 +12,7 @@ String importIdFromKey(String key) => key.substring(importKeyPrefix.length);
 
 /// One imported puzzle, kept independently of the difficulty slots.
 class ImportedGame {
-  const ImportedGame({
-    required this.id,
-    required this.state,
-    required this.savedAt,
-  });
+  const new({required this.id, required this.state, required this.savedAt});
 
   final String id;
   final GameState state;
@@ -28,13 +24,12 @@ class ImportedGame {
 /// Index entry: enough to list and order the library without decoding every
 /// saved board.
 class ImportIndexEntry {
-  const ImportIndexEntry({required this.id, required this.savedAt});
+  const new({required this.id, required this.savedAt});
 
-  factory ImportIndexEntry.fromJson(Map<String, dynamic> json) =>
-      ImportIndexEntry(
-        id: json['id'] as String,
-        savedAt: DateTime.fromMillisecondsSinceEpoch(json['savedAt'] as int),
-      );
+  factory fromJson(Map<String, dynamic> json) => ImportIndexEntry(
+    id: json['id'] as String,
+    savedAt: DateTime.fromMillisecondsSinceEpoch(json['savedAt'] as int),
+  );
 
   final String id;
   final DateTime savedAt;

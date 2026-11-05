@@ -1,45 +1,48 @@
+import 'package:sudoku/domain/models/game_state.dart';
+
 /// One undo step. Actions are persisted with [GameState.toJson] so that undo
 /// survives closing the app; [GameAction.fromJson] rebuilds them.
 sealed class GameAction {
-  const GameAction();
+  const new();
 
   Map<String, dynamic> toJson();
 
-  factory GameAction.fromJson(Map<String, dynamic> json) =>
-      switch (json['type']) {
-        'digit' => DigitAction(
-          cellIndex: json['cellIndex'] as int,
-          previousValue: json['previousValue'] as int,
-          newValue: json['newValue'] as int,
-          previousNotes: _notesFromJson(json['previousNotes']),
-          previousCoachEliminations: _ledgerFromJson(json['eliminations']),
-        ),
-        'pencil' => PencilAction(
-          cellIndex: json['cellIndex'] as int,
-          previousNotes: Set<int>.from(json['previousNotes'] as List),
-          newNotes: Set<int>.from(json['newNotes'] as List),
-          previousValue: json['previousValue'] as int,
-          previousCoachEliminations: _ledgerFromJson(json['eliminations']),
-        ),
-        'erase' => EraseAction(
-          cellIndex: json['cellIndex'] as int,
-          previousValue: json['previousValue'] as int,
-          previousNotes: Set<int>.from(json['previousNotes'] as List),
-          previousCoachEliminations: _ledgerFromJson(json['eliminations']),
-        ),
-        'autoNotes' => AutoNotesAction(
-          previousNotes: _noteListFromJson(json['previousNotes']),
-        ),
-        'coachNotes' => CoachNotesAction(
-          previousNotes: _noteListFromJson(json['previousNotes']),
-          previousCoachEliminations: _ledgerFromJson(json['eliminations']),
-        ),
-        final type => throw FormatException('Unknown game action "$type"'),
-      };
+  GameState undo(GameState state);
+
+  factory fromJson(Map<String, dynamic> json) => switch (json['type']) {
+    'digit' => DigitAction(
+      cellIndex: json['cellIndex'] as int,
+      previousValue: json['previousValue'] as int,
+      newValue: json['newValue'] as int,
+      previousNotes: _notesFromJson(json['previousNotes']),
+      previousCoachEliminations: _ledgerFromJson(json['eliminations']),
+    ),
+    'pencil' => PencilAction(
+      cellIndex: json['cellIndex'] as int,
+      previousNotes: Set<int>.from(json['previousNotes'] as List),
+      newNotes: Set<int>.from(json['newNotes'] as List),
+      previousValue: json['previousValue'] as int,
+      previousCoachEliminations: _ledgerFromJson(json['eliminations']),
+    ),
+    'erase' => EraseAction(
+      cellIndex: json['cellIndex'] as int,
+      previousValue: json['previousValue'] as int,
+      previousNotes: Set<int>.from(json['previousNotes'] as List),
+      previousCoachEliminations: _ledgerFromJson(json['eliminations']),
+    ),
+    'autoNotes' => AutoNotesAction(
+      previousNotes: _noteListFromJson(json['previousNotes']),
+    ),
+    'coachNotes' => CoachNotesAction(
+      previousNotes: _noteListFromJson(json['previousNotes']),
+      previousCoachEliminations: _ledgerFromJson(json['eliminations']),
+    ),
+    final type => throw FormatException('Unknown game action "$type"'),
+  };
 }
 
 class DigitAction extends GameAction {
-  const DigitAction({
+  const new({
     required this.cellIndex,
     required this.previousValue,
     required this.previousNotes,
@@ -56,6 +59,22 @@ class DigitAction extends GameAction {
   final int newValue;
 
   final List<Set<int>> previousCoachEliminations;
+
+  @override
+  GameState undo(GameState state) {
+    final newNotes = List<Set<int>>.from(state.notes.map(Set<int>.from));
+    previousNotes.forEach((i, notes) {
+      newNotes[i] = Set<int>.from(notes);
+    });
+    final grid = state.grid.clone()..setValue(cellIndex, previousValue);
+    final trimmed = state.history.sublist(0, state.history.length - 1);
+    return state.copyWith(
+      grid: grid,
+      notes: newNotes,
+      coachEliminations: _copyLedger(previousCoachEliminations),
+      history: trimmed,
+    );
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -91,7 +110,7 @@ class DigitAction extends GameAction {
 }
 
 class PencilAction extends GameAction {
-  const PencilAction({
+  const new({
     required this.cellIndex,
     required this.previousNotes,
     required this.newNotes,
@@ -108,6 +127,20 @@ class PencilAction extends GameAction {
   final int previousValue;
 
   final List<Set<int>> previousCoachEliminations;
+
+  @override
+  GameState undo(GameState state) {
+    final newNotes = List<Set<int>>.from(state.notes.map(Set<int>.from));
+    newNotes[cellIndex] = Set<int>.from(previousNotes);
+    final grid = state.grid.clone()..setValue(cellIndex, previousValue);
+    final trimmed = state.history.sublist(0, state.history.length - 1);
+    return state.copyWith(
+      grid: grid,
+      notes: newNotes,
+      coachEliminations: _copyLedger(previousCoachEliminations),
+      history: trimmed,
+    );
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -143,7 +176,7 @@ class PencilAction extends GameAction {
 }
 
 class EraseAction extends GameAction {
-  const EraseAction({
+  const new({
     required this.cellIndex,
     required this.previousValue,
     required this.previousNotes,
@@ -157,6 +190,20 @@ class EraseAction extends GameAction {
   final Set<int> previousNotes;
 
   final List<Set<int>> previousCoachEliminations;
+
+  @override
+  GameState undo(GameState state) {
+    final newNotes = List<Set<int>>.from(state.notes.map(Set<int>.from));
+    newNotes[cellIndex] = Set<int>.from(previousNotes);
+    final grid = state.grid.clone()..setValue(cellIndex, previousValue);
+    final trimmed = state.history.sublist(0, state.history.length - 1);
+    return state.copyWith(
+      grid: grid,
+      notes: newNotes,
+      coachEliminations: _copyLedger(previousCoachEliminations),
+      history: trimmed,
+    );
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -189,9 +236,18 @@ class EraseAction extends GameAction {
 }
 
 class AutoNotesAction extends GameAction {
-  const AutoNotesAction({required this.previousNotes});
+  const new({required this.previousNotes});
 
   final List<Set<int>> previousNotes;
+
+  @override
+  GameState undo(GameState state) {
+    final trimmed = state.history.sublist(0, state.history.length - 1);
+    return state.copyWith(
+      notes: previousNotes.map(Set<int>.from).toList(),
+      history: trimmed,
+    );
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -211,7 +267,7 @@ class AutoNotesAction extends GameAction {
 
 /// One undo step for a coach move that changes candidates in several cells.
 class CoachNotesAction extends GameAction {
-  const CoachNotesAction({
+  const new({
     required this.previousNotes,
     required this.previousCoachEliminations,
   });
@@ -219,6 +275,16 @@ class CoachNotesAction extends GameAction {
   final List<Set<int>> previousNotes;
 
   final List<Set<int>> previousCoachEliminations;
+
+  @override
+  GameState undo(GameState state) {
+    final trimmed = state.history.sublist(0, state.history.length - 1);
+    return state.copyWith(
+      notes: previousNotes.map(Set<int>.from).toList(),
+      coachEliminations: _copyLedger(previousCoachEliminations),
+      history: trimmed,
+    );
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -243,6 +309,13 @@ class CoachNotesAction extends GameAction {
     _ledgerHash(previousCoachEliminations),
   );
 }
+
+/// Restores a saved ledger at full length, so a short or missing one (an older
+/// save) reads back as all-empty rather than crashing.
+List<Set<int>> _copyLedger(List<Set<int>> source) => List<Set<int>>.generate(
+  81,
+  (i) => i < source.length ? Set<int>.from(source[i]) : <int>{},
+);
 
 List<int> _sorted(Set<int> digits) => digits.toList()..sort();
 
@@ -299,5 +372,4 @@ int _notesHash(Map<int, Set<int>> notes) => Object.hashAllUnordered(
   notes.entries.map((entry) => Object.hash(entry.key, _setHash(entry.value))),
 );
 
-int _ledgerHash(List<Set<int>> ledger) =>
-    Object.hashAll(ledger.map(_setHash));
+int _ledgerHash(List<Set<int>> ledger) => Object.hashAll(ledger.map(_setHash));

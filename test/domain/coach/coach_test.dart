@@ -101,9 +101,10 @@ void main() {
       final engine = GameEngine(
         GameState.newGame(puzzle: puzzle, difficulty: Difficulty.easy),
       );
-      final empty = List.generate(81, (i) => i).firstWhere(
-        (i) => puzzle.given.valueAt(i) == 0,
-      );
+      final empty = List.generate(
+        81,
+        (i) => i,
+      ).firstWhere((i) => puzzle.given.valueAt(i) == 0);
       final wrong = puzzle.solution.valueAt(empty) % 9 + 1;
       engine.inputDigit(empty, wrong);
 
@@ -122,9 +123,10 @@ void main() {
       final engine = GameEngine(
         GameState.newGame(puzzle: puzzle, difficulty: Difficulty.easy),
       );
-      final empty = List.generate(81, (i) => i).firstWhere(
-        (i) => puzzle.given.valueAt(i) == 0,
-      );
+      final empty = List.generate(
+        81,
+        (i) => i,
+      ).firstWhere((i) => puzzle.given.valueAt(i) == 0);
       final wrongNote = puzzle.solution.valueAt(empty) % 9 + 1;
       engine.toggleNote(empty, wrongNote);
 
@@ -162,13 +164,10 @@ void main() {
           ..applyCoachStep(step)
           ..undo();
         expect(engine.currentState.notes, beforeNotes);
-        expect(
-          [
-            for (var i = 0; i < 81; i++)
-              engine.currentState.coachEliminationsAt(i),
-          ],
-          beforeEliminations,
-        );
+        expect([
+          for (var i = 0; i < 81; i++)
+            engine.currentState.coachEliminationsAt(i),
+        ], beforeEliminations);
         return;
       }
     }, timeout: const Timeout(Duration(seconds: 30)));
@@ -180,16 +179,23 @@ void main() {
       );
       final plain = nextCoachStep(engine.currentState)!;
 
-      final empty = List.generate(81, (i) => i).firstWhere(
-        (i) => puzzle.given.valueAt(i) == 0,
-      );
+      final empty = List.generate(
+        81,
+        (i) => i,
+      ).firstWhere((i) => puzzle.given.valueAt(i) == 0);
       // A note that keeps the solution digit is a legal note the coach must
       // ignore rather than reason from.
       engine.toggleNote(empty, puzzle.solution.valueAt(empty));
-      expect(_signature(nextCoachStep(engine.currentState)!), _signature(plain));
+      expect(
+        _signature(nextCoachStep(engine.currentState)!),
+        _signature(plain),
+      );
 
       engine.autoFillNotes();
-      expect(_signature(nextCoachStep(engine.currentState)!), _signature(plain));
+      expect(
+        _signature(nextCoachStep(engine.currentState)!),
+        _signature(plain),
+      );
     });
 
     test('applying an elimination never re-offers it', () {
@@ -323,13 +329,9 @@ void main() {
         reason: 'replacing a digit must invalidate recorded deductions',
       );
       engine.undo();
-      expect(
-        [
-          for (var i = 0; i < 81; i++)
-            engine.currentState.coachEliminationsAt(i),
-        ],
-        ledger,
-      );
+      expect([
+        for (var i = 0; i < 81; i++) engine.currentState.coachEliminationsAt(i),
+      ], ledger);
 
       engine.toggleNote(cell, other);
       expect(
@@ -338,13 +340,9 @@ void main() {
         reason: 'turning a digit into a note must invalidate deductions',
       );
       engine.undo();
-      expect(
-        [
-          for (var i = 0; i < 81; i++)
-            engine.currentState.coachEliminationsAt(i),
-        ],
-        ledger,
-      );
+      expect([
+        for (var i = 0; i < 81; i++) engine.currentState.coachEliminationsAt(i),
+      ], ledger);
     }, timeout: const Timeout(Duration(seconds: 60)));
 
     test('erasing a digit clears the ledger and undo restores it', () {
@@ -364,7 +362,8 @@ void main() {
       expect(recorded, isTrue, reason: 'no elimination was recorded');
 
       final cell = List.generate(81, (i) => i).firstWhere(
-        (i) => puzzle.given.valueAt(i) == 0 &&
+        (i) =>
+            puzzle.given.valueAt(i) == 0 &&
             engine.currentState.grid.valueAt(i) == 0,
       );
       engine.inputDigit(cell, puzzle.solution.valueAt(cell));
@@ -379,13 +378,9 @@ void main() {
         reason: 'erasing a digit must invalidate recorded deductions',
       );
       engine.undo();
-      expect(
-        [
-          for (var i = 0; i < 81; i++)
-            engine.currentState.coachEliminationsAt(i),
-        ],
-        ledger,
-      );
+      expect([
+        for (var i = 0; i < 81; i++) engine.currentState.coachEliminationsAt(i),
+      ], ledger);
     }, timeout: const Timeout(Duration(seconds: 60)));
   });
 

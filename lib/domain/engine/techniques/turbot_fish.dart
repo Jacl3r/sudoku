@@ -43,12 +43,7 @@ class TurbotFish implements SudokuTechnique {
             final tip2 = r2 * 9 + tipCol2;
             // A pattern cell can see both tips; eliminating the digit from one
             // of them is not a valid deduction.
-            final pattern = {
-              r1 * 9 + baseCol,
-              r2 * 9 + baseCol,
-              tip1,
-              tip2,
-            };
+            final pattern = {r1 * 9 + baseCol, r2 * 9 + baseCol, tip1, tip2};
 
             for (var target = 0; target < 81; target++) {
               if (pattern.contains(target)) continue;
@@ -97,12 +92,7 @@ class TurbotFish implements SudokuTechnique {
             final tip2 = tipRow2 * 9 + c2;
             // A pattern cell can see both tips; eliminating the digit from one
             // of them is not a valid deduction.
-            final pattern = {
-              baseRow * 9 + c1,
-              baseRow * 9 + c2,
-              tip1,
-              tip2,
-            };
+            final pattern = {baseRow * 9 + c1, baseRow * 9 + c2, tip1, tip2};
 
             for (var target = 0; target < 81; target++) {
               if (pattern.contains(target)) continue;

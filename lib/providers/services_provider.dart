@@ -120,7 +120,7 @@ class ImportedGamesNotifier extends Notifier<List<ImportedGame>> {
 
 /// A game the home screen can offer to resume.
 class ResumableGame {
-  const ResumableGame({required this.state, this.imported});
+  const new({required this.state, this.imported});
 
   final GameState state;
   final ImportedGame? imported;

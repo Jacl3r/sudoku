@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 /// stage 3 shows the pattern and what it removes, stage 4 applies it.
 @immutable
 class CoachStep {
-  const CoachStep({
+  const new({
     required this.headline,
     required this.technique,
     required this.about,

@@ -12,9 +12,7 @@ import 'package:sudoku/domain/models/sudoku_grid.dart';
 CoachStep? nextCoachStep(GameState state) => findCoachStep(
   values: state.grid.values,
   notes: state.notes,
-  eliminations: [
-    for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
-  ],
+  eliminations: [for (var i = 0; i < 81; i++) state.coachEliminationsAt(i)],
   solution: state.puzzle.solution.values,
   givens: state.puzzle.given.values,
 );
@@ -51,12 +49,9 @@ Set<int> possibleCandidates(List<int> values, int index) {
 /// digits, minus eliminations already applied. Player notes deliberately play no
 /// part, because partial notes would make the deduction unsound.
 class CoachBoard {
-  CoachBoard(this.values, this.masks);
+  new(this.values, this.masks);
 
-  factory CoachBoard.fromState(
-    List<int> values,
-    List<Set<int>> eliminations,
-  ) {
+  factory fromState(List<int> values, List<Set<int>> eliminations) {
     final masks = List<int>.filled(81, 0);
     for (var i = 0; i < 81; i++) {
       if (values[i] != 0) continue;
@@ -86,8 +81,7 @@ class CoachBoard {
       if (has(i, d)) i,
   ];
 
-  SudokuGrid toGrid() =>
-      SudokuGrid(
+  SudokuGrid toGrid() => SudokuGrid(
     values: List<int>.from(values),
     candidates: List<int>.from(masks),
   );
@@ -137,7 +131,11 @@ List<int> _boxCells(int b) => kGridUnits[18 + b];
 
 bool _sees(int a, int b) => kGridPeerSets[a].contains(b);
 
-Iterable<List<T>> _combinations<T>(List<T> items, int k, [int start = 0]) sync* {
+Iterable<List<T>> _combinations<T>(
+  List<T> items,
+  int k, [
+  int start = 0,
+]) sync* {
   if (k == 0) {
     yield <T>[];
     return;
@@ -185,10 +183,12 @@ CoachStep? _findMistake(
       return CoachStep(
         headline: 'Something on the board is off.',
         technique: 'Mistake',
-        about: 'One of your digits does not fit the solution. '
+        about:
+            'One of your digits does not fit the solution. '
             'Everything built on it will lead nowhere.',
         nudge: 'Check your digits in box ${box + 1}.',
-        explanation: 'The ${values[i]} in ${cellName(i)} is wrong. '
+        explanation:
+            'The ${values[i]} in ${cellName(i)} is wrong. '
             'Erase it and look at that area again.',
         focusCells: _boxCells(box).toSet(),
         patternCells: {i},
@@ -203,10 +203,12 @@ CoachStep? _findMistake(
       return CoachStep(
         headline: 'One of your notes went too far.',
         technique: 'Note removed too early',
-        about: 'A candidate was removed that is still possible. '
+        about:
+            'A candidate was removed that is still possible. '
             'Steps based on it can be wrong.',
         nudge: 'Check your notes in box ${box + 1}.',
-        explanation: 'The notes in ${cellName(i)} are missing a digit that '
+        explanation:
+            'The notes in ${cellName(i)} are missing a digit that '
             'can still go there. Reset them to every possible candidate.',
         focusCells: _boxCells(box).toSet(),
         patternCells: {i},
@@ -241,7 +243,8 @@ CoachStep? _hiddenSingle(CoachBoard b) {
         technique: 'Hidden Single',
         about: _hiddenSingleAbout,
         nudge: 'Look at where $d can go in ${unitName(u)}.',
-        explanation: 'In ${unitName(u)}, $d only fits in ${cellName(cell)}. '
+        explanation:
+            'In ${unitName(u)}, $d only fits in ${cellName(cell)}. '
             'Every other cell there is blocked.',
         focusCells: unit.toSet(),
         patternCells: {cell},
@@ -265,7 +268,8 @@ CoachStep? _nakedSingle(CoachBoard b) {
       technique: 'Naked Single',
       about: 'A cell with only one candidate left.',
       nudge: 'One cell in box ${box + 1} has only one option left.',
-      explanation: '${cellName(i)} can only be $d. '
+      explanation:
+          '${cellName(i)} can only be $d. '
           'Every other digit already appears in its row, column or box.',
       focusCells: _boxCells(box).toSet(),
       patternCells: {i},
@@ -299,10 +303,12 @@ CoachStep? _pointing(CoachBoard b) {
         return CoachStep(
           headline: 'Look for a Pointing Pair.',
           technique: cells.length == 2 ? 'Pointing Pair' : 'Pointing Triple',
-          about: 'When a digit inside a box is limited to one row or column, '
+          about:
+              'When a digit inside a box is limited to one row or column, '
               'it cannot appear anywhere else on that line.',
           nudge: 'Look at where $d can go in box ${box + 1}.',
-          explanation: 'In box ${box + 1}, every $d sits in $lineName '
+          explanation:
+              'In box ${box + 1}, every $d sits in $lineName '
               '(${cellList(cells)}). So the $d of $lineName must be inside '
               'box ${box + 1}. Remove $d from ${cellList(targets)}.',
           focusCells: boxCells.toSet(),
@@ -332,10 +338,12 @@ CoachStep? _boxLineReduction(CoachBoard b) {
       return CoachStep(
         headline: 'Look for a Box/Line Reduction.',
         technique: 'Box/Line Reduction',
-        about: 'When a digit in a row or column is limited to one box, '
+        about:
+            'When a digit in a row or column is limited to one box, '
             'it cannot appear anywhere else in that box.',
         nudge: 'Look at where $d can go in ${unitName(u)}.',
-        explanation: 'In ${unitName(u)}, every $d sits inside box ${box + 1} '
+        explanation:
+            'In ${unitName(u)}, every $d sits inside box ${box + 1} '
             '(${cellList(cells)}). So box ${box + 1} gets its $d from that '
             'line. Remove $d from ${cellList(targets)}.',
         focusCells: line.toSet(),
@@ -376,10 +384,12 @@ CoachStep? _nakedSubset(CoachBoard b, int n) {
       return CoachStep(
         headline: 'Look for a Naked $word.',
         technique: 'Naked $word',
-        about: 'When $count cells in a house only hold the same $count '
+        about:
+            'When $count cells in a house only hold the same $count '
             'digits, those digits are locked into them.',
         nudge: 'Look at the cells with few candidates in ${unitName(u)}.',
-        explanation: '${cellList(combo)} only contain ${digitList(union)}. '
+        explanation:
+            '${cellList(combo)} only contain ${digitList(union)}. '
             'Those digits must go into these cells, so remove them from '
             'the rest of ${unitName(u)}: ${cellList(elim.keys)}.',
         focusCells: unit.toSet(),
@@ -415,10 +425,12 @@ CoachStep? _hiddenSubset(CoachBoard b, int n) {
       return CoachStep(
         headline: 'Look for a Hidden $word.',
         technique: 'Hidden $word',
-        about: 'When $count digits only fit in the same $count cells of a '
+        about:
+            'When $count digits only fit in the same $count cells of a '
             'house, those cells cannot hold anything else.',
         nudge: 'Look at where each digit can go in ${unitName(u)}.',
-        explanation: 'In ${unitName(u)}, ${digitList(combo)} only fit in '
+        explanation:
+            'In ${unitName(u)}, ${digitList(combo)} only fit in '
             '${cellList(cells)}. So those cells are reserved for them. '
             'Remove the other candidates from them.',
         focusCells: unit.toSet(),
@@ -477,7 +489,8 @@ CoachStep? _fish(CoachBoard b, int n) {
                     'columns there, so it cannot appear elsewhere in them.'
               : 'Like an X-Wing, but with three rows and three columns.',
           nudge: 'Look at where $d can go in $baseWord ${bases.join(', ')}.',
-          explanation: 'In $baseWord ${bases.join(', ')}, $d only fits in '
+          explanation:
+              'In $baseWord ${bases.join(', ')}, $d only fits in '
               '$coverWord ${covers.join(', ')}. Whichever way it resolves, '
               '$d takes each of those $coverWord inside the pattern. '
               'Remove $d from ${cellList(targets)}.',
@@ -523,12 +536,15 @@ CoachStep? _skyscraper(CoachBoard b) {
               return CoachStep(
                 headline: 'Look for a Skyscraper.',
                 technique: 'Skyscraper',
-                about: 'Two rows (or columns) each have a digit in exactly '
+                about:
+                    'Two rows (or columns) each have a digit in exactly '
                     'two cells, and one end of each lines up. One of the '
                     'two other ends must hold the digit.',
-                nudge: 'Look at $d in $word ${lines[i] + 1} and '
+                nudge:
+                    'Look at $d in $word ${lines[i] + 1} and '
                     '${lines[j] + 1}.',
-                explanation: 'In $word ${lines[i] + 1} and ${lines[j] + 1}, '
+                explanation:
+                    'In $word ${lines[i] + 1} and ${lines[j] + 1}, '
                     '$d has exactly two spots each. ${cellName(baseA)} and '
                     '${cellName(baseC)} share a $cw, so at most one of them '
                     'is $d. That means ${cellName(tipA)} or ${cellName(tipC)} '
@@ -581,12 +597,15 @@ CoachStep? _twoStringKite(CoachBoard b) {
             return CoachStep(
               headline: 'Look for a Two-String Kite.',
               technique: 'Two-String Kite',
-              about: 'A row and a column each have a digit in exactly two '
+              about:
+                  'A row and a column each have a digit in exactly two '
                   'cells, and they meet in one box. One of the two free '
                   'ends must hold the digit.',
-              nudge: 'Look at $d in row ${row.key + 1} and '
+              nudge:
+                  'Look at $d in row ${row.key + 1} and '
                   'column ${col.key + 1}.',
-              explanation: 'In row ${row.key + 1}, $d is in ${cellName(rEnd)} '
+              explanation:
+                  'In row ${row.key + 1}, $d is in ${cellName(rEnd)} '
                   'or ${cellName(tipR)}. In column ${col.key + 1}, $d is in '
                   '${cellName(cEnd)} or ${cellName(tipC)}. ${cellName(rEnd)} '
                   'and ${cellName(cEnd)} share box $box, so at most one of '
@@ -633,12 +652,15 @@ CoachStep? _xyWing(CoachBoard b) {
         return CoachStep(
           headline: 'Look for an XY-Wing.',
           technique: 'XY-Wing',
-          about: 'A cell with two candidates (the pivot) sees two other '
+          about:
+              'A cell with two candidates (the pivot) sees two other '
               'two-candidate cells. Each wing shares one digit with the '
               'pivot and one digit with the other wing.',
-          nudge: 'Look at the cells with two candidates around '
+          nudge:
+              'Look at the cells with two candidates around '
               '${cellName(pivot)}.',
-          explanation: '${cellName(pivot)} is $x or $y. If it is $x, '
+          explanation:
+              '${cellName(pivot)} is $x or $y. If it is $x, '
               '${cellName(w1)} becomes $z. If it is $y, ${cellName(w2)} '
               'becomes $z. Either way one wing is $z, so cells that see '
               'both wings cannot be $z: ${cellList(targets)}.',
@@ -675,11 +697,14 @@ CoachStep? _xyzWing(CoachBoard b) {
       return CoachStep(
         headline: 'Look for an XYZ-Wing.',
         technique: 'XYZ-Wing',
-        about: 'Like an XY-Wing, but the pivot holds all three digits. '
+        about:
+            'Like an XY-Wing, but the pivot holds all three digits. '
             'Only cells that see the pivot and both wings are affected.',
-        nudge: 'Look at the three-candidate cell ${cellName(pivot)} and its '
+        nudge:
+            'Look at the three-candidate cell ${cellName(pivot)} and its '
             'neighbours.',
-        explanation: '${cellName(pivot)} holds ${digitList(pd)}, '
+        explanation:
+            '${cellName(pivot)} holds ${digitList(pd)}, '
             '${cellName(w1)} holds ${digitList(a)}, ${cellName(w2)} holds '
             '${digitList(c)}. One of these three cells must be $z. Cells '
             'that see all three cannot be $z: ${cellList(targets)}.',
@@ -713,10 +738,12 @@ CoachStep? _fallback(CoachBoard b) {
       return CoachStep(
         headline: 'Look for $name.',
         technique: name,
-        about: 'An advanced technique. The coach can name it but not '
+        about:
+            'An advanced technique. The coach can name it but not '
             'draw it yet.',
         nudge: 'It leads to a digit in ${cellName(hint.cellIndex)}.',
-        explanation: '$name places ${hint.value} in '
+        explanation:
+            '$name places ${hint.value} in '
             '${cellName(hint.cellIndex)}.',
         patternCells: {hint.cellIndex},
         patternDigits: {hint.value},
@@ -729,10 +756,12 @@ CoachStep? _fallback(CoachBoard b) {
       return CoachStep(
         headline: 'Look for $name.',
         technique: name,
-        about: 'An advanced technique. The coach can name it but not '
+        about:
+            'An advanced technique. The coach can name it but not '
             'draw it yet.',
         nudge: 'It affects ${cellName(hint.cellIndex)}.',
-        explanation: '$name removes ${digitList(digits)} from '
+        explanation:
+            '$name removes ${digitList(digits)} from '
             '${cellName(hint.cellIndex)}.',
         patternCells: {hint.cellIndex},
         eliminations: {hint.cellIndex: digits.toSet()},

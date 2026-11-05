@@ -6,7 +6,7 @@ import 'package:sudoku/domain/models/sudoku_grid.dart';
 import 'package:sudoku/domain/models/utils.dart';
 
 class GameState {
-  const GameState({
+  const new({
     required this.puzzle,
     required this.difficulty,
     required this.grid,
@@ -37,17 +37,15 @@ class GameState {
   Set<int> coachEliminationsAt(int index) =>
       index < coachEliminations.length ? coachEliminations[index] : const {};
 
-  factory GameState.newGame({
-    required Puzzle puzzle,
-    required Difficulty difficulty,
-  }) => GameState(
-    puzzle: puzzle,
-    difficulty: difficulty,
-    grid: puzzle.given.clone(),
-    notes: List.generate(81, (_) => {}),
-    history: const [],
-    coachEliminations: List.generate(81, (_) => {}),
-  );
+  factory newGame({required Puzzle puzzle, required Difficulty difficulty}) =>
+      GameState(
+        puzzle: puzzle,
+        difficulty: difficulty,
+        grid: puzzle.given.clone(),
+        notes: List.generate(81, (_) => {}),
+        history: const [],
+        coachEliminations: List.generate(81, (_) => {}),
+      );
 
   GameState copyWith({
     Puzzle? puzzle,
@@ -98,7 +96,7 @@ class GameState {
           elapsed == other.elapsed &&
           assists == other.assists;
 
-  factory GameState.fromJson(Map<String, dynamic> json) {
+  factory fromJson(Map<String, dynamic> json) {
     final given = SudokuGrid(
       values: List<int>.from(json['givenValues'] as List),
     );
@@ -153,6 +151,7 @@ class GameState {
       'autoNotes': assists.autoNotes,
       'validation': assists.validation,
     },
+    'puzzleComplete': puzzleComplete,
   };
 
   @override

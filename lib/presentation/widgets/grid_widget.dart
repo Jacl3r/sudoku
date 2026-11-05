@@ -8,11 +8,7 @@ import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 
 class GridWidget extends StatelessWidget {
-  const GridWidget({
-    required this.gameState,
-    this.reservedHeight = 0,
-    super.key,
-  });
+  const new({required this.gameState, this.reservedHeight = 0, super.key});
 
   final GameState gameState;
 
@@ -69,11 +65,7 @@ class GridWidget extends StatelessWidget {
 }
 
 class _Cell extends ConsumerWidget {
-  const _Cell({
-    required this.index,
-    required this.gameState,
-    required this.size,
-  });
+  const new({required this.index, required this.gameState, required this.size});
   final int index;
   final GameState gameState;
   final double size;
@@ -121,7 +113,11 @@ class _Cell extends ConsumerWidget {
         if (board.selectedDigit != null) {
           ref
               .read(gameProvider.notifier)
-              .inputDigit(index, board.selectedDigit!);
+              .inputDigit(
+                index,
+                board.selectedDigit!,
+                inputMode: board.inputMode,
+              );
         } else {
           ref.read(boardProvider.notifier).selectCell(index);
         }

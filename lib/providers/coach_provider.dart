@@ -19,7 +19,7 @@ enum CoachStage {
 
 @immutable
 class CoachState {
-  const CoachState({
+  const new({
     required this.step,
     required this.stage,
     required this.boardKey,
@@ -86,10 +86,9 @@ class CoachNotifier extends Notifier<CoachState?> {
     final step = nextCoachStep(game);
     final marks = <int, Set<int>>{};
     if (step != null) {
-      final board = CoachBoard.fromState(
-        game.grid.values,
-        [for (var i = 0; i < 81; i++) game.coachEliminationsAt(i)],
-      );
+      final board = CoachBoard.fromState(game.grid.values, [
+        for (var i = 0; i < 81; i++) game.coachEliminationsAt(i),
+      ]);
       for (final cell in step.patternCells) {
         if (board.values[cell] != 0) continue;
         final digits = step.patternDigits
@@ -122,7 +121,7 @@ enum CoachTint { none, area, pattern, target }
 
 @immutable
 class CoachCellView {
-  const CoachCellView({
+  const new({
     this.tint = CoachTint.none,
     this.mark = const {},
     this.strike = const {},

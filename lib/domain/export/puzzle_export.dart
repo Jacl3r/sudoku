@@ -11,7 +11,7 @@ enum ExportContent {
         'possible candidate.',
   );
 
-  const ExportContent(this.label, this.description);
+  new(this.label, this.description);
   final String label;
   final String description;
 }
@@ -26,26 +26,24 @@ enum ExportFormat {
   ),
   link('Link', 'Opens the board in the SudokuWiki solver.');
 
-  const ExportFormat(this.label, this.description);
+  new(this.label, this.description);
   final String label;
   final String description;
 }
 
 class PuzzleExport {
-  const PuzzleExport({
+  const new({
     required this.values,
     required this.givens,
     required this.notes,
     this.eliminations = const [],
   });
 
-  factory PuzzleExport.fromState(GameState state) => PuzzleExport(
+  factory fromState(GameState state) => PuzzleExport(
     values: state.grid.values,
     givens: state.puzzle.given.values,
     notes: state.notes,
-    eliminations: [
-      for (var i = 0; i < 81; i++) state.coachEliminationsAt(i),
-    ],
+    eliminations: [for (var i = 0; i < 81; i++) state.coachEliminationsAt(i)],
   );
 
   final List<int> values;
