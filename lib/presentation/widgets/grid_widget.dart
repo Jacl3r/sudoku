@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/presentation/models/board_intent.dart';
 import 'package:sudoku/presentation/shared/board_intent_actions.dart';
+import 'package:sudoku/presentation/shared/board_metrics.dart';
 import 'package:sudoku/presentation/widgets/sudoku_cell.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/coach_provider.dart';
@@ -18,22 +19,10 @@ class GridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.sizeOf(context);
-    final isPortrait = MediaQuery.orientationOf(context) == .portrait;
-    final availableHeight =
-        mq.height -
-        (Scaffold.of(context).appBarMaxHeight ?? 56.0) -
-        220.0 -
-        reservedHeight;
-    // In portrait the column has to fit whatever height is left, so a short
-    // screen shrinks the grid instead of falling back to the full width and
-    // pushing the controls off the bottom. Landscape keeps the width fallback.
-    final maxGrid = isPortrait
-        ? availableHeight.clamp(140.0, mq.width - 16)
-        : availableHeight > 200
-        ? availableHeight
-        : mq.width - 16;
-    final size = maxGrid.clamp(0.0, 520.0);
+    final size = BoardMetrics.of(
+      context,
+      reservedHeight: reservedHeight,
+    ).gridSize;
 
     return IgnorePointer(
       ignoring: gameState.puzzleComplete,
