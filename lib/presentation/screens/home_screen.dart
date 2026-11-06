@@ -1,14 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
-import 'package:sudoku/presentation/screens/game_screen.dart';
 import 'package:sudoku/presentation/screens/imported_puzzles_screen.dart';
 import 'package:sudoku/presentation/screens/settings_screen.dart';
 import 'package:sudoku/presentation/screens/stats_screen.dart';
+import 'package:sudoku/presentation/shared/open_save.dart';
 import 'package:sudoku/presentation/shared/utils.dart';
 import 'package:sudoku/presentation/widgets/theme_onboarding_sheet.dart';
-import 'package:sudoku/providers/difficulty_provider.dart';
-import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/home_page_provider.dart';
 import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/theme_provider.dart';
@@ -54,12 +52,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hasSave =
         pageDifficulty != null && continueGameMap[pageDifficulty] != null;
 
-    void openGame(String key, Difficulty difficulty) {
-      ref.read(difficultyProvider.notifier).set(difficulty);
-      ref.read(activeSaveKeyProvider.notifier).set(key);
-      Navigator.of(context)
-          .push(MaterialPageRoute<void>(builder: (_) => const GameScreen()));
-    }
+    void openGame(String key, Difficulty difficulty) =>
+        openSavedGame(context, ref, key: key, difficulty: difficulty);
 
     Future<void> newGame(Difficulty difficulty) async {
       await ref.read(saveGameServiceProvider).delete(difficulty);

@@ -2,11 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/imported_game.dart';
-import 'package:sudoku/presentation/screens/game_screen.dart';
+import 'package:sudoku/presentation/shared/open_save.dart';
 import 'package:sudoku/presentation/shared/utils.dart';
 import 'package:sudoku/presentation/widgets/import_sudoku_dialog.dart';
-import 'package:sudoku/providers/difficulty_provider.dart';
-import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 
 /// Puzzles imported from outside the app, kept separately from the difficulty
@@ -79,12 +77,12 @@ class _ImportedRow extends ConsumerWidget {
       subtitle: Text(
         '$date · $filled of 81 · ${formatTime(game.state.elapsed)}',
       ),
-      onTap: () {
-        ref.read(difficultyProvider.notifier).set(game.state.difficulty);
-        ref.read(activeSaveKeyProvider.notifier).set(game.key);
-        Navigator.of(context)
-            .push(MaterialPageRoute<void>(builder: (_) => const GameScreen()));
-      },
+      onTap: () => openSavedGame(
+        context,
+        ref,
+        key: game.key,
+        difficulty: game.state.difficulty,
+      ),
       trailing: PopupMenuButton<String>(
         tooltip: 'More',
         onSelected: (_) async {

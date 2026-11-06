@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
-import 'package:sudoku/presentation/screens/game_screen.dart';
-import 'package:sudoku/providers/difficulty_provider.dart';
-import 'package:sudoku/providers/game_notifier.dart';
+import 'package:sudoku/presentation/shared/open_save.dart';
 import 'package:sudoku/providers/services_provider.dart';
 
 class ImportSudokuDialog extends ConsumerStatefulWidget {
@@ -107,13 +105,13 @@ class _ImportSudokuState extends ConsumerState<ImportSudokuDialog> {
               final imported = await ref
                   .read(saveGameServiceProvider)
                   .saveImport(validPuzzle!);
-              ref
-                  .read(difficultyProvider.notifier)
-                  .set(validPuzzle!.difficulty);
-              ref.read(activeSaveKeyProvider.notifier).set(imported.key);
               if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute<void>(builder: (_) => const GameScreen()),
+                openSavedGame(
+                  context,
+                  ref,
+                  key: imported.key,
+                  difficulty: validPuzzle!.difficulty,
+                  replace: true,
                 );
               }
             },
