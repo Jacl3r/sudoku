@@ -1,5 +1,79 @@
 import 'package:sudoku/domain/models/game_state.dart';
 
+/// Everything a step changed, expressed the same way whatever the step was:
+/// cells going back to a value, notes coming back (per cell, or the whole
+/// board), and the elimination ledger as it was before.
+///
+/// One restore, so the five actions stop re-implementing clone-grid /
+/// copy-notes / restore-ledger / trim-history, and one equality, so they stop
+/// re-deriving set comparison four times.
+final class UndoStep {
+  const new({
+    this.values = const {},
+    this.notes = const {},
+    this.allNotes,
+    this.eliminations,
+  });
+
+  /// Cells to put back, by index. A value of 0 clears the cell.
+  final Map<int, int> values;
+
+  /// Per-cell notes to put back, for a step that touched a few cells.
+  final Map<int, Set<int>> notes;
+
+  /// The whole notes list, for a step that rewrote it (auto notes, coach move).
+  final List<Set<int>>? allNotes;
+
+  /// The ledger before the step. Null leaves the current ledger alone.
+  final List<Set<int>>? eliminations;
+
+  GameState restore(GameState state) {
+    final grid = state.grid.clone();
+    for (final entry in values.entries) {
+      grid.setValue(entry.key, entry.value);
+    }
+
+    final restoredNotes = switch (allNotes) {
+      final all? => [for (final cell in all) Set<int>.from(cell)],
+      null => [
+        for (var i = 0; i < state.notes.length; i++)
+          Set<int>.from(notes[i] ?? state.notes[i]),
+      ],
+    };
+
+    final ledger = eliminations;
+    return state.copyWith(
+      grid: grid,
+      notes: restoredNotes,
+      coachEliminations: ledger == null
+          ? state.coachEliminations
+          : _expandedLedger(ledger),
+      history: state.history.isEmpty
+          ? state.history
+          : state.history.sublist(0, state.history.length - 1),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UndoStep &&
+          _valuesEqual(values, other.values) &&
+          _notesEqual(notes, other.notes) &&
+          _optionalListEqual(allNotes, other.allNotes) &&
+          _optionalListEqual(eliminations, other.eliminations);
+
+  @override
+  int get hashCode => Object.hash(
+    Object.hashAllUnordered(
+      values.entries.map((e) => Object.hash(e.key, e.value)),
+    ),
+    _notesHash(notes),
+    allNotes == null ? null : _ledgerHash(allNotes!),
+    eliminations == null ? null : _ledgerHash(eliminations!),
+  );
+}
+
 /// One undo step. Actions are persisted with [GameState.toJson] so that undo
 /// survives closing the app; [GameAction.fromJson] rebuilds them.
 sealed class GameAction {
@@ -7,7 +81,10 @@ sealed class GameAction {
 
   Map<String, dynamic> toJson();
 
-  GameState undo(GameState state);
+  /// What this action changed. The one thing subclasses must say.
+  UndoStep get step;
+
+  GameState undo(GameState state) => step.restore(state);
 
   factory fromJson(Map<String, dynamic> json) => switch (json['type']) {
     'digit' => DigitAction(
@@ -61,20 +138,11 @@ class DigitAction extends GameAction {
   final List<Set<int>> previousCoachEliminations;
 
   @override
-  GameState undo(GameState state) {
-    final newNotes = List<Set<int>>.from(state.notes.map(Set<int>.from));
-    previousNotes.forEach((i, notes) {
-      newNotes[i] = Set<int>.from(notes);
-    });
-    final grid = state.grid.clone()..setValue(cellIndex, previousValue);
-    final trimmed = state.history.sublist(0, state.history.length - 1);
-    return state.copyWith(
-      grid: grid,
-      notes: newNotes,
-      coachEliminations: _copyLedger(previousCoachEliminations),
-      history: trimmed,
-    );
-  }
+  UndoStep get step => UndoStep(
+    values: {cellIndex: previousValue},
+    notes: previousNotes,
+    eliminations: previousCoachEliminations,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -89,24 +157,10 @@ class DigitAction extends GameAction {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is DigitAction &&
-          cellIndex == other.cellIndex &&
-          previousValue == other.previousValue &&
-          newValue == other.newValue &&
-          _notesEqual(previousNotes, other.previousNotes) &&
-          _ledgerEqual(
-            previousCoachEliminations,
-            other.previousCoachEliminations,
-          );
+      other is DigitAction && newValue == other.newValue && step == other.step;
 
   @override
-  int get hashCode => Object.hash(
-    cellIndex,
-    previousValue,
-    newValue,
-    _notesHash(previousNotes),
-    _ledgerHash(previousCoachEliminations),
-  );
+  int get hashCode => Object.hash(newValue, step);
 }
 
 class PencilAction extends GameAction {
@@ -129,18 +183,11 @@ class PencilAction extends GameAction {
   final List<Set<int>> previousCoachEliminations;
 
   @override
-  GameState undo(GameState state) {
-    final newNotes = List<Set<int>>.from(state.notes.map(Set<int>.from));
-    newNotes[cellIndex] = Set<int>.from(previousNotes);
-    final grid = state.grid.clone()..setValue(cellIndex, previousValue);
-    final trimmed = state.history.sublist(0, state.history.length - 1);
-    return state.copyWith(
-      grid: grid,
-      notes: newNotes,
-      coachEliminations: _copyLedger(previousCoachEliminations),
-      history: trimmed,
-    );
-  }
+  UndoStep get step => UndoStep(
+    values: {cellIndex: previousValue},
+    notes: {cellIndex: previousNotes},
+    eliminations: previousCoachEliminations,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -156,23 +203,11 @@ class PencilAction extends GameAction {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PencilAction &&
-          cellIndex == other.cellIndex &&
-          previousValue == other.previousValue &&
-          _setEqual(previousNotes, other.previousNotes) &&
           _setEqual(newNotes, other.newNotes) &&
-          _ledgerEqual(
-            previousCoachEliminations,
-            other.previousCoachEliminations,
-          );
+          step == other.step;
 
   @override
-  int get hashCode => Object.hash(
-    cellIndex,
-    previousValue,
-    _setHash(previousNotes),
-    _setHash(newNotes),
-    _ledgerHash(previousCoachEliminations),
-  );
+  int get hashCode => Object.hash(_setHash(newNotes), step);
 }
 
 class EraseAction extends GameAction {
@@ -192,18 +227,11 @@ class EraseAction extends GameAction {
   final List<Set<int>> previousCoachEliminations;
 
   @override
-  GameState undo(GameState state) {
-    final newNotes = List<Set<int>>.from(state.notes.map(Set<int>.from));
-    newNotes[cellIndex] = Set<int>.from(previousNotes);
-    final grid = state.grid.clone()..setValue(cellIndex, previousValue);
-    final trimmed = state.history.sublist(0, state.history.length - 1);
-    return state.copyWith(
-      grid: grid,
-      notes: newNotes,
-      coachEliminations: _copyLedger(previousCoachEliminations),
-      history: trimmed,
-    );
-  }
+  UndoStep get step => UndoStep(
+    values: {cellIndex: previousValue},
+    notes: {cellIndex: previousNotes},
+    eliminations: previousCoachEliminations,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -216,23 +244,10 @@ class EraseAction extends GameAction {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EraseAction &&
-          cellIndex == other.cellIndex &&
-          previousValue == other.previousValue &&
-          _setEqual(previousNotes, other.previousNotes) &&
-          _ledgerEqual(
-            previousCoachEliminations,
-            other.previousCoachEliminations,
-          );
+      identical(this, other) || other is EraseAction && step == other.step;
 
   @override
-  int get hashCode => Object.hash(
-    cellIndex,
-    previousValue,
-    _setHash(previousNotes),
-    _ledgerHash(previousCoachEliminations),
-  );
+  int get hashCode => step.hashCode;
 }
 
 class AutoNotesAction extends GameAction {
@@ -241,13 +256,7 @@ class AutoNotesAction extends GameAction {
   final List<Set<int>> previousNotes;
 
   @override
-  GameState undo(GameState state) {
-    final trimmed = state.history.sublist(0, state.history.length - 1);
-    return state.copyWith(
-      notes: previousNotes.map(Set<int>.from).toList(),
-      history: trimmed,
-    );
-  }
+  UndoStep get step => UndoStep(allNotes: previousNotes);
 
   @override
   Map<String, dynamic> toJson() => {
@@ -257,12 +266,10 @@ class AutoNotesAction extends GameAction {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AutoNotesAction &&
-          _ledgerEqual(previousNotes, other.previousNotes);
+      identical(this, other) || other is AutoNotesAction && step == other.step;
 
   @override
-  int get hashCode => _ledgerHash(previousNotes);
+  int get hashCode => step.hashCode;
 }
 
 /// One undo step for a coach move that changes candidates in several cells.
@@ -277,14 +284,10 @@ class CoachNotesAction extends GameAction {
   final List<Set<int>> previousCoachEliminations;
 
   @override
-  GameState undo(GameState state) {
-    final trimmed = state.history.sublist(0, state.history.length - 1);
-    return state.copyWith(
-      notes: previousNotes.map(Set<int>.from).toList(),
-      coachEliminations: _copyLedger(previousCoachEliminations),
-      history: trimmed,
-    );
-  }
+  UndoStep get step => UndoStep(
+    allNotes: previousNotes,
+    eliminations: previousCoachEliminations,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -295,27 +298,19 @@ class CoachNotesAction extends GameAction {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CoachNotesAction &&
-          _ledgerEqual(previousNotes, other.previousNotes) &&
-          _ledgerEqual(
-            previousCoachEliminations,
-            other.previousCoachEliminations,
-          );
+      identical(this, other) || other is CoachNotesAction && step == other.step;
 
   @override
-  int get hashCode => Object.hash(
-    _ledgerHash(previousNotes),
-    _ledgerHash(previousCoachEliminations),
-  );
+  int get hashCode => step.hashCode;
 }
 
-/// Restores a saved ledger at full length, so a short or missing one (an older
-/// save) reads back as all-empty rather than crashing.
-List<Set<int>> _copyLedger(List<Set<int>> source) => List<Set<int>>.generate(
-  81,
-  (i) => i < source.length ? Set<int>.from(source[i]) : <int>{},
-);
+/// A saved ledger can be short or missing (an older save). Restoring fills the
+/// rest with empty cells rather than crashing.
+List<Set<int>> _expandedLedger(List<Set<int>> source) =>
+    List<Set<int>>.generate(
+      81,
+      (i) => i < source.length ? Set<int>.from(source[i]) : <int>{},
+    );
 
 List<int> _sorted(Set<int> digits) => digits.toList()..sort();
 
@@ -349,6 +344,14 @@ List<Set<int>> _ledgerFromJson(Object? raw) =>
 bool _setEqual(Set<int> a, Set<int> b) =>
     a.length == b.length && a.containsAll(b);
 
+bool _valuesEqual(Map<int, int> a, Map<int, int> b) {
+  if (a.length != b.length) return false;
+  for (final entry in a.entries) {
+    if (b[entry.key] != entry.value) return false;
+  }
+  return true;
+}
+
 bool _notesEqual(Map<int, Set<int>> a, Map<int, Set<int>> b) {
   if (a.length != b.length) return false;
   for (final entry in a.entries) {
@@ -356,6 +359,11 @@ bool _notesEqual(Map<int, Set<int>> a, Map<int, Set<int>> b) {
     if (other == null || !_setEqual(entry.value, other)) return false;
   }
   return true;
+}
+
+bool _optionalListEqual(List<Set<int>>? a, List<Set<int>>? b) {
+  if (a == null || b == null) return a == b;
+  return _ledgerEqual(a, b);
 }
 
 bool _ledgerEqual(List<Set<int>> a, List<Set<int>> b) {
