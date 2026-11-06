@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:sudoku/domain/coach/coach_step.dart';
 import 'package:sudoku/domain/engine/candidates.dart';
+import 'package:sudoku/domain/engine/fish_pattern.dart';
 import 'package:sudoku/domain/engine/grid_utils.dart';
 import 'package:sudoku/domain/engine/techniques/techniques.dart';
 import 'package:sudoku/domain/models/game_state.dart';
@@ -440,37 +441,21 @@ CoachStep? _hiddenSubset(CoachBoard b, int n) {
 CoachStep? _fish(CoachBoard b, int n) {
   for (var d = 1; d <= 9; d++) {
     for (final byRow in [true, false]) {
-      final lines = <int, List<int>>{}; // line index -> cross positions
-      for (var l = 0; l < 9; l++) {
-        final cells = b.cellsFor(byRow ? _rowCells(l) : _colCells(l), d);
-        if (cells.length >= 2 && cells.length <= n) {
-          lines[l] = cells.map(byRow ? getCol : getRow).toList();
-        }
-      }
-      if (lines.length < n) continue;
-      for (final combo in _combinations(lines.keys.toList(), n)) {
-        final cover = <int>{for (final l in combo) ...lines[l]!};
-        if (cover.length != n) continue;
-        final pattern = <int>{
-          for (final l in combo)
-            for (final x in lines[l]!)
-              if (byRow) l * 9 + x else x * 9 + l,
-        };
-        final targets = <int>[
-          for (final x in cover)
-            for (final i in byRow ? _colCells(x) : _rowCells(x))
-              if (!pattern.contains(i) && b.has(i, d)) i,
-        ];
-        if (targets.isEmpty) continue;
+      for (final fish in findFishPatterns(
+        digit: d,
+        size: n,
+        byRow: byRow,
+        has: b.has,
+      )) {
+        if (fish.targets.isEmpty) continue;
 
-        final name = n == 2 ? 'X-Wing' : 'Swordfish';
-        final baseWord = byRow ? 'rows' : 'columns';
-        final coverWord = byRow ? 'columns' : 'rows';
-        final bases = (combo.toList()..sort()).map((l) => '${l + 1}');
-        final covers = (cover.toList()..sort()).map((x) => '${x + 1}');
-        final focus = <int>{
-          for (final l in combo) ...(byRow ? _rowCells(l) : _colCells(l)),
-        };
+        final name = fish.name;
+        final baseWord = fish.byRow ? 'rows' : 'columns';
+        final coverWord = fish.byRow ? 'columns' : 'rows';
+        final bases = fish.baseLines.map((l) => '${l + 1}');
+        final covers = (fish.coverLines.toList()..sort()).map(
+          (x) => '${x + 1}',
+        );
         return CoachStep(
           headline: 'Look for an $name.',
           technique: name,
@@ -484,11 +469,11 @@ CoachStep? _fish(CoachBoard b, int n) {
               'In $baseWord ${bases.join(', ')}, $d only fits in '
               '$coverWord ${covers.join(', ')}. Whichever way it resolves, '
               '$d takes each of those $coverWord inside the pattern. '
-              'Remove $d from ${cellList(targets)}.',
-          focusCells: focus,
-          patternCells: pattern,
+              'Remove $d from ${cellList(fish.targets)}.',
+          focusCells: fish.focusCells,
+          patternCells: fish.patternCells,
           patternDigits: {d},
-          eliminations: _elim(targets, d),
+          eliminations: _elim(fish.targets, d),
         );
       }
     }
