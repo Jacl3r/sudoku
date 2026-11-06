@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/game_state.dart';
+import 'package:sudoku/presentation/models/board_intent.dart';
+import 'package:sudoku/presentation/shared/board_intent_actions.dart';
 import 'package:sudoku/providers/board_notifier.dart';
-import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 
 class DigitPad extends ConsumerWidget {
@@ -13,8 +14,6 @@ class DigitPad extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final board = ref.watch(boardProvider);
-    final gameNotifier = ref.read(gameProvider.notifier);
-    final boardNotifier = ref.read(boardProvider.notifier);
     final digitCounts = state.grid.digitCounts;
     final showRemaining = ref.watch(
       settingsProvider.select((s) => s.showRemainingCounts),
@@ -32,16 +31,12 @@ class DigitPad extends ConsumerWidget {
             count: count,
             showCount: showRemaining,
             onTap: () {
-              if (state.puzzleComplete) return;
-              if (board.selectedCell != null) {
-                gameNotifier.inputDigit(
-                  board.selectedCell!,
-                  digit,
-                  inputMode: board.inputMode,
-                );
-              } else {
-                boardNotifier.selectDigit(digit);
-              }
+              final intent = intentForDigitTap(
+                digit: digit,
+                board: board,
+                puzzleComplete: state.puzzleComplete,
+              );
+              if (intent != null) applyBoardIntent(ref, intent);
             },
           );
         })..add(
@@ -51,11 +46,11 @@ class DigitPad extends ConsumerWidget {
             count: 9,
             showCount: false,
             onTap: () {
-              if (state.puzzleComplete) return;
-              final cell = board.selectedCell;
-              if (cell != null) {
-                gameNotifier.erase(cell);
-              }
+              final intent = intentForErase(
+                board: board,
+                puzzleComplete: state.puzzleComplete,
+              );
+              if (intent != null) applyBoardIntent(ref, intent);
             },
           ),
         );
