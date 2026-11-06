@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/game_state.dart';
+import 'package:sudoku/presentation/models/board_intent.dart';
+import 'package:sudoku/presentation/shared/board_intent_actions.dart';
 import 'package:sudoku/presentation/shared/utils.dart';
 import 'package:sudoku/presentation/widgets/action_row.dart';
 import 'package:sudoku/presentation/widgets/coach_bar.dart';
@@ -13,6 +15,7 @@ import 'package:sudoku/presentation/widgets/solved_overlay.dart';
 import 'package:sudoku/presentation/widgets/theme_selector.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/coach_provider.dart';
+import 'package:sudoku/providers/game_command.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/settings_provider.dart';
@@ -30,7 +33,6 @@ class GameScreen extends ConsumerWidget {
     final game = gameAsync.value;
 
     final board = ref.watch(boardProvider);
-    final boardNotifier = ref.read(boardProvider.notifier);
 
     return Scaffold(
       body: SafeArea(
@@ -64,7 +66,6 @@ class GameScreen extends ConsumerWidget {
                   onKeyEvent: (node, event) {
                     if (event is! KeyDownEvent) return .ignored;
                     final key = event.logicalKey;
-                    final current = board.selectedCell ?? 0;
 
                     // Leave modifier combinations to the host, except undo.
                     final modifier =
@@ -73,32 +74,22 @@ class GameScreen extends ConsumerWidget {
                     if (modifier) {
                       if (key == LogicalKeyboardKey.keyZ &&
                           !game.puzzleComplete) {
-                        gameNotifier.undo();
+                        gameNotifier.apply(const UndoStep());
                         return .handled;
                       }
                       return .ignored;
                     }
 
-                    switch (key) {
-                      case .arrowLeft || .keyA:
-                        if (current % 9 > 0) {
-                          boardNotifier.selectCell(current - 1);
-                        }
-                        return .handled;
-                      case .arrowRight || .keyD:
-                        if (current % 9 < 8) {
-                          boardNotifier.selectCell(current + 1);
-                        }
-                        return .handled;
-                      case .arrowUp || .keyW:
-                        if (current >= 9) boardNotifier.selectCell(current - 9);
-                        return .handled;
-                      case .arrowDown || .keyS:
-                        if (current <= 71) {
-                          boardNotifier.selectCell(current + 9);
-                        }
-                        return .handled;
-                      default:
+                    // Board inputs resolve in one place; anything else falls
+                    // through to the app actions below.
+                    final intent = intentForKey(
+                      key: key,
+                      board: board,
+                      puzzleComplete: game.puzzleComplete,
+                    );
+                    if (intent != null) {
+                      applyBoardIntent(ref, intent);
+                      return .handled;
                     }
 
                     // Navigation stays live, every action below goes quiet once
@@ -106,21 +97,14 @@ class GameScreen extends ConsumerWidget {
                     if (game.puzzleComplete) return .ignored;
 
                     switch (key) {
-                      case .backspace || .delete || .keyX:
-                        final cell = board.selectedCell;
-                        if (cell != null) gameNotifier.erase(cell);
-                        return .handled;
-                      case .keyN || .keyP:
-                        boardNotifier.toggleInputMode();
-                        return .handled;
                       case .keyU:
-                        gameNotifier.undo();
+                        gameNotifier.apply(const UndoStep());
                         return .handled;
                       case .keyH:
                         showHintSheet(context, ref, gameNotifier);
                         return .handled;
                       case .keyR:
-                        confirmReset(context, gameNotifier, boardNotifier);
+                        confirmReset(context, gameNotifier);
                         return .handled;
                       case .keyE:
                         showExportSheet(context, game);
@@ -128,21 +112,6 @@ class GameScreen extends ConsumerWidget {
                       default:
                     }
 
-                    if (key.keyLabel.length == 1) {
-                      final d = int.tryParse(key.keyLabel);
-                      if (d != null && d >= 1 && d <= 9) {
-                        if (board.selectedCell != null) {
-                          gameNotifier.inputDigit(
-                            board.selectedCell!,
-                            d,
-                            inputMode: board.inputMode,
-                          );
-                        } else {
-                          boardNotifier.selectDigit(d);
-                        }
-                        return .handled;
-                      }
-                    }
                     return .ignored;
                   },
                   child: _GameBody(state: game),

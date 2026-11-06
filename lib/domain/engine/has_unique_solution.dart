@@ -1,28 +1,18 @@
+import 'package:sudoku/domain/engine/candidates.dart';
 import 'package:sudoku/domain/engine/grid_utils.dart';
 import 'package:sudoku/domain/models/sudoku_grid.dart';
 
 bool hasUniqueSolution(SudokuGrid grid) {
   final cells = List<int>.from(grid.values);
-  final candidates = _buildCandidates(cells);
+  final candidates = candidatesFor(cells);
   return _search(cells, candidates, limit: 2) == 1;
 }
 
 SudokuGrid? solveGrid(SudokuGrid grid) {
   final cells = List<int>.from(grid.values);
-  final candidates = _buildCandidates(cells);
+  final candidates = candidatesFor(cells);
   final success = _search(cells, candidates, limit: 1) > 0;
   return success ? SudokuGrid(values: cells) : null;
-}
-
-List<Set<int>> _buildCandidates(List<int> cells) {
-  return List.generate(81, (i) {
-    if (cells[i] != 0) return <int>{};
-    final used = <int>{};
-    for (final p in kGridPeers[i]) {
-      if (cells[p] != 0) used.add(cells[p]);
-    }
-    return {1, 2, 3, 4, 5, 6, 7, 8, 9}..removeAll(used);
-  });
 }
 
 int _search(List<int> cells, List<Set<int>> candidates, {required int limit}) {

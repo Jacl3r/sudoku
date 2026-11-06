@@ -1,15 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sudoku/domain/coach/coach_step.dart';
 import 'package:sudoku/domain/engine/game_engine.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/domain/models/imported_game.dart';
 import 'package:sudoku/domain/models/stat_record.dart';
-import 'package:sudoku/presentation/shared/input_method.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/difficulty_provider.dart';
+import 'package:sudoku/providers/game_command.dart';
 import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 import 'package:sudoku/providers/stats_provider.dart';
@@ -103,55 +102,59 @@ class GameNotifier extends AsyncNotifier<GameState?> {
     _timer?.cancel();
   }
 
-  void inputDigit(int cellIndex, int digit, {required InputMode inputMode}) {
-    if (inputMode == .number) {
-      final autoRemoveNotes = ref.read(settingsProvider).autoRemoveNotes;
-      _gameEngine?.inputDigit(
-        cellIndex,
-        digit,
-        autoRemoveNotes: autoRemoveNotes,
-      );
-    } else {
-      _gameEngine?.toggleNote(cellIndex, digit);
+  /// The one way to change the game. Every call mutates the engine, publishes
+  /// the new state, and bookkeeps completion in the same place.
+  void apply(GameCommand command) {
+    final engine = _gameEngine;
+    if (engine == null) return;
+
+    switch (command) {
+      case EnterDigit(:final cell, :final digit, :final inputMode):
+        if (inputMode == .number) {
+          engine.inputDigit(
+            cell,
+            digit,
+            autoRemoveNotes: ref.read(settingsProvider).autoRemoveNotes,
+          );
+        } else {
+          engine.toggleNote(cell, digit);
+        }
+      case EraseEntry(:final cell):
+        engine.erase(cell);
+      case UndoStep():
+        engine.undo();
+      case RevealHint():
+        engine.revealHint(
+          autoRemoveNotes: ref.read(settingsProvider).autoRemoveNotes,
+        );
+      case MarkHintUsed():
+        engine.markHintUsed();
+      case ValidateBoard():
+        ref.read(boardProvider.notifier).setErrorCells(engine.findErrors());
+      case FillNotes():
+        engine.autoFillNotes();
+      case ApplyCoachStep(:final step):
+        engine.applyCoachStep(
+          step,
+          autoRemoveNotes: ref.read(settingsProvider).autoRemoveNotes,
+        );
+        // A fresh deduction replaces whatever the last validation flagged.
+        ref.read(boardProvider.notifier).setErrorCells({});
+      case RestartGame():
+        engine.restart();
+        ref.read(boardProvider.notifier).reset();
     }
-    state = AsyncData(_gameEngine?.currentState);
-    if (_gameEngine?.currentState.puzzleComplete == true) {
-      _onPuzzleComplete();
-    }
+
+    _publish();
   }
 
-  void erase(int cellIndex) {
-    _gameEngine?.erase(cellIndex);
-    state = AsyncData(_gameEngine?.currentState);
-  }
-
-  void undo() {
-    _gameEngine?.undo();
-    state = AsyncData(_gameEngine?.currentState);
-  }
-
-  void hint() {
-    final autoRemoveNotes = ref.read(settingsProvider).autoRemoveNotes;
-    _gameEngine?.revealHint(autoRemoveNotes: autoRemoveNotes);
-    state = AsyncData(_gameEngine?.currentState);
-    if (_gameEngine?.currentState.puzzleComplete == true) {
-      _onPuzzleComplete();
-    }
-  }
-
-  void markHintUsed() {
-    _gameEngine?.markHintUsed();
-    state = AsyncData(_gameEngine?.currentState);
-  }
-
-  void applyCoachStep(CoachStep step) {
-    final autoRemoveNotes = ref.read(settingsProvider).autoRemoveNotes;
-    _gameEngine?.applyCoachStep(step, autoRemoveNotes: autoRemoveNotes);
-    ref.read(boardProvider.notifier).setErrorCells({});
-    state = AsyncData(_gameEngine?.currentState);
-    if (_gameEngine?.currentState.puzzleComplete == true) {
-      _onPuzzleComplete();
-    }
+  void _publish() {
+    final engine = _gameEngine;
+    if (engine == null) return;
+    final wasComplete = state.value?.puzzleComplete ?? false;
+    final next = engine.currentState;
+    state = AsyncData(next);
+    if (!wasComplete && next.puzzleComplete) _onPuzzleComplete();
   }
 
   void _onPuzzleComplete() {
@@ -163,22 +166,4 @@ class GameNotifier extends AsyncNotifier<GameState?> {
       ref.read(statsNotifierProvider.notifier).add(record);
     }
   }
-
-  void runValidation() {
-    final errors = _gameEngine?.findErrors();
-    ref.read(boardProvider.notifier).setErrorCells(errors ?? {});
-    state = AsyncData(_gameEngine?.currentState);
-  }
-
-  void applyAutoNotes() {
-    _gameEngine?.autoFillNotes();
-    state = AsyncData(_gameEngine?.currentState);
-  }
-
-  void restart() {
-    _gameEngine?.restart();
-    state = AsyncData(_gameEngine?.currentState);
-  }
-
-  bool get canUndo => _gameEngine?.canUndo == true;
 }

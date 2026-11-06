@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/game_state.dart';
+import 'package:sudoku/presentation/models/board_intent.dart';
+import 'package:sudoku/presentation/shared/board_intent_actions.dart';
 import 'package:sudoku/presentation/widgets/sudoku_cell.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/coach_provider.dart';
-import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/settings_provider.dart';
 
 class GridWidget extends StatelessWidget {
@@ -107,24 +108,10 @@ class _Cell extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () {
-        if (isError) {
-          ref.read(boardProvider.notifier).removeErrorCell(index);
-        }
-        if (board.selectedDigit != null) {
-          ref
-              .read(gameProvider.notifier)
-              .inputDigit(
-                index,
-                board.selectedDigit!,
-                inputMode: board.inputMode,
-              );
-        } else {
-          ref.read(boardProvider.notifier).selectCell(index);
-        }
+        if (isError) applyBoardIntent(ref, ClearErrorCell(index));
+        applyBoardIntent(ref, intentForCellTap(cell: index, board: board));
       },
-      onLongPress: () {
-        ref.read(gameProvider.notifier).erase(index);
-      },
+      onLongPress: () => applyBoardIntent(ref, EraseCell(index)),
       child: SudokuCell(
         index: index,
         size: size,

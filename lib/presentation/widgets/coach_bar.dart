@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/export/puzzle_export.dart';
 import 'package:sudoku/presentation/widgets/export_sheet.dart';
 import 'package:sudoku/providers/coach_provider.dart';
+import 'package:sudoku/providers/game_command.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 
 /// Height the coach bar takes at the default text scale.
@@ -51,7 +52,7 @@ class CoachBar extends ConsumerWidget {
           TextButton(
             onPressed: () {
               notifier.close();
-              game.hint();
+              game.apply(const RevealHint());
             },
             child: const Text('Reveal a cell'),
           ),
@@ -87,7 +88,7 @@ class CoachBar extends ConsumerWidget {
           body = step.nudge;
           action = FilledButton(
             onPressed: () {
-              game.markHintUsed();
+              game.apply(const MarkHintUsed());
               notifier.next();
             },
             child: const Text('How?'),
@@ -97,7 +98,7 @@ class CoachBar extends ConsumerWidget {
           action = FilledButton(
             onPressed: () {
               notifier.close();
-              game.applyCoachStep(step);
+              game.apply(ApplyCoachStep(step));
             },
             child: const Text('Apply'),
           );

@@ -34,17 +34,6 @@ Set<int> peersOf(int index) => kGridPeerSets[index];
 
 final List<Set<int>> kGridPeerSets = kGridPeers.map((l) => l.toSet()).toList();
 
-List<Set<int>> buildCandidates(List<int> cells) {
-  return List.generate(81, (i) {
-    if (cells[i] != 0) return <int>{};
-    final used = <int>{};
-    for (final p in kGridPeers[i]) {
-      if (cells[p] != 0) used.add(cells[p]);
-    }
-    return {1, 2, 3, 4, 5, 6, 7, 8, 9}..removeAll(used);
-  });
-}
-
 final List<List<int>> kGridUnits = () {
   final units = <List<int>>[];
 

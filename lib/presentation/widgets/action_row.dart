@@ -3,15 +3,12 @@ import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/presentation/shared/utils.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/coach_provider.dart';
+import 'package:sudoku/providers/game_command.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 
 /// Asks before restarting the current puzzle. Shared by the toolbar and the
 /// `r` shortcut.
-Future<void> confirmReset(
-  BuildContext context,
-  GameNotifier notifier,
-  BoardNotifier boardNotifier,
-) async {
+Future<void> confirmReset(BuildContext context, GameNotifier notifier) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -34,8 +31,9 @@ Future<void> confirmReset(
     ),
   );
   if (confirmed == true) {
-    notifier.restart();
-    boardNotifier.reset();
+    // Restarting resets the board's selection too, so the caller needs one call
+    // rather than two.
+    notifier.apply(const RestartGame());
   }
 }
 
@@ -72,7 +70,7 @@ Future<void> showHintSheet(
               title: const Text('Reveal a cell'),
               onTap: () {
                 Navigator.pop(ctx);
-                notifier.hint();
+                notifier.apply(const RevealHint());
               },
             ),
             ListTile(
@@ -80,7 +78,7 @@ Future<void> showHintSheet(
               title: const Text('Validate'),
               onTap: () {
                 Navigator.pop(ctx);
-                notifier.runValidation();
+                notifier.apply(const ValidateBoard());
               },
             ),
             ListTile(
@@ -88,7 +86,7 @@ Future<void> showHintSheet(
               title: const Text('Auto fill all notes'),
               onTap: () {
                 Navigator.pop(ctx);
-                notifier.applyAutoNotes();
+                notifier.apply(const FillNotes());
               },
             ),
           ],
@@ -116,7 +114,7 @@ class ActionRow extends ConsumerWidget {
         children: [
           _ActionButton(
             icon: Icons.refresh_rounded,
-            onTap: () => confirmReset(context, gameNotifier, boardNotifier),
+            onTap: () => confirmReset(context, gameNotifier),
             tooltip: 'Reset',
             shortcut: 'R',
           ),
@@ -135,7 +133,7 @@ class ActionRow extends ConsumerWidget {
           ),
           _ActionButton(
             icon: Icons.undo_rounded,
-            onTap: gameNotifier.undo,
+            onTap: () => gameNotifier.apply(const UndoStep()),
             tooltip: 'Undo',
             shortcut: 'U',
           ),
