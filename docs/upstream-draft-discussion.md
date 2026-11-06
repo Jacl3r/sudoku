@@ -19,15 +19,16 @@ Body:
 >
 > What it is: an **Export puzzle** icon in the game top bar, next to the theme picker,
 > where the other board-wide actions are. It opens one bottom sheet where you pick what
-> to export (starting puzzle, progress, or progress with notes), the format (one line of
-> digits, text grid, or pencilmark grid), and whether to add a short prompt asking an AI
-> for a nudge instead of the solution. One Copy button.
-> Cells without notes show every digit that is still possible, so the text is a valid
-> position even if the notes are partial. No new dependency, no permission, no platform
-> code, and nothing about hints or the solver changes.
+> to export (the starting puzzle or your progress), the format (one line of digits, a
+> text grid, or a pencilmark grid), and whether to add a short prompt asking an AI for a
+> nudge instead of the solution. One Copy button. The pencilmark grid uses your own notes
+> where you made some and every possible digit elsewhere, so the text is a valid position
+> even if the notes are partial. No new dependency, no permission, no platform code, and
+> nothing about hints or the solver changes.
 >
-> Size: about 400 lines including tests, in three new files plus a small edit to
-> `action_row.dart`. `dart format`, `dart fix` and `flutter analyze` are clean and
+> Size: about 500 lines including tests, in two new files, one test file and a small edit
+> to the game screen's top bar. `dart format`, `dart fix` and `flutter analyze` are clean
+> and
 > `flutter test` passes.
 >
 > I should be upfront: I'm a UX designer, not a developer, and this was written with an
