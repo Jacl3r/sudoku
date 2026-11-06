@@ -76,20 +76,14 @@ class LastPlayedNotifier extends Notifier<String?> {
 
   @override
   String? build() {
+    final service = ref.read(saveGameServiceProvider);
     final sub = _box.watch().listen((event) {
-      if (event.key != SaveGameService.lastPlayedKey) return;
-      state = _read();
+      if (!service.isLastPlayedKey(event.key)) return;
+      state = service.lastPlayed;
     });
 
     ref.onDispose(sub.cancel);
-    return _read();
-  }
-
-  String? _read() {
-    final key = _box.get(SaveGameService.lastPlayedKey);
-    if (key == null) return null;
-    if (isImportKey(key)) return key;
-    return Difficulty.values.any((d) => d.name == key) ? key : null;
+    return service.lastPlayed;
   }
 }
 
@@ -105,17 +99,15 @@ class ImportedGamesNotifier extends Notifier<List<ImportedGame>> {
 
   @override
   List<ImportedGame> build() {
+    final service = ref.read(saveGameServiceProvider);
     final sub = _box.watch().listen((event) {
-      final key = event.key as String;
-      if (key != SaveGameService.importsKey && !isImportKey(key)) return;
-      state = _read();
+      if (!service.isLibraryKey(event.key)) return;
+      state = service.imports();
     });
 
     ref.onDispose(sub.cancel);
-    return _read();
+    return service.imports();
   }
-
-  List<ImportedGame> _read() => ref.read(saveGameServiceProvider).imports();
 }
 
 /// A game the home screen can offer to resume.

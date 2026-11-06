@@ -11,12 +11,28 @@ class SaveGameService {
 
   /// Box key naming the game saved most recently: a difficulty name or an
   /// `import:<id>` key.
-  static const lastPlayedKey = '__lastPlayed';
+  static const _lastPlayedKey = '__lastPlayed';
 
   /// Box key holding the import index as JSON.
-  static const importsKey = '__imports';
+  static const _importsKey = '__imports';
 
   final Box<String> _box;
+
+  /// The save a resume would open, or null when the marker names something we
+  /// no longer understand (an old import, a renamed difficulty).
+  String? get lastPlayed {
+    final key = _box.get(_lastPlayedKey);
+    if (key == null) return null;
+    if (isImportKey(key)) return key;
+    return Difficulty.values.any((d) => d.name == key) ? key : null;
+  }
+
+  /// Whether a box change with [key] can move [_lastPlayedKey].
+  bool isLastPlayedKey(Object? key) => key == _lastPlayedKey;
+
+  /// Whether a box change with [key] can change the import library.
+  bool isLibraryKey(Object? key) =>
+      key == _importsKey || (key is String && isImportKey(key));
 
   Future<void> save(GameState state, {String? key}) async {
     final target = key ?? state.difficulty.name;
@@ -28,7 +44,7 @@ class SaveGameService {
         ..insert(0, ImportIndexEntry(id: id, savedAt: DateTime.now()));
       await _writeIndex(index);
     }
-    await _box.put(lastPlayedKey, target);
+    await _box.put(_lastPlayedKey, target);
   }
 
   GameState? load(Difficulty difficulty) => loadKey(difficulty.name);
@@ -48,8 +64,8 @@ class SaveGameService {
         _readIndex()..removeWhere((entry) => entry.id == importIdFromKey(key)),
       );
     }
-    if (_box.get(lastPlayedKey) == key) {
-      await _box.delete(lastPlayedKey);
+    if (_box.get(_lastPlayedKey) == key) {
+      await _box.delete(_lastPlayedKey);
     }
   }
 
@@ -81,7 +97,7 @@ class SaveGameService {
   ];
 
   List<ImportIndexEntry> _readIndex() {
-    final raw = _box.get(importsKey);
+    final raw = _box.get(_importsKey);
     if (raw == null) return [];
     return [
       for (final entry in jsonDecode(raw) as List)
@@ -90,7 +106,7 @@ class SaveGameService {
   }
 
   Future<void> _writeIndex(List<ImportIndexEntry> entries) => _box.put(
-    importsKey,
+    _importsKey,
     jsonEncode([for (final entry in entries) entry.toJson()]),
   );
 }

@@ -50,7 +50,7 @@ void main() {
     await service.save(
       GameState.newGame(puzzle: puzzle, difficulty: Difficulty.expert),
     );
-    expect(game.get(SaveGameService.lastPlayedKey), 'expert');
+    expect(service.lastPlayed, 'expert');
     expect(service.load(Difficulty.expert), isNotNull);
 
     // Everything the player had survives the round trip.
@@ -72,10 +72,10 @@ void main() {
 
     // Deleting something else leaves the marker alone.
     await service.delete(Difficulty.easy);
-    expect(game.get(SaveGameService.lastPlayedKey), 'expert');
+    expect(service.lastPlayed, 'expert');
 
     await service.delete(Difficulty.expert);
-    expect(game.get(SaveGameService.lastPlayedKey), isNull);
+    expect(service.lastPlayed, isNull);
     expect(service.load(Difficulty.expert), isNull);
   });
 
@@ -108,13 +108,13 @@ void main() {
     );
 
     // Saving an import updates the marker and the index timestamp.
-    expect(game.get(SaveGameService.lastPlayedKey), importKey(two.id));
+    expect(service.lastPlayed, importKey(two.id));
 
     await service.deleteImport(two.id);
     expect(service.imports().length, 1);
     expect(service.loadImport(two.id), isNull);
     expect(
-      game.get(SaveGameService.lastPlayedKey),
+      service.lastPlayed,
       isNull,
       reason: 'deleting the active import clears the marker',
     );
