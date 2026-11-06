@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:sudoku/domain/coach/coach_step.dart';
+import 'package:sudoku/domain/engine/candidates.dart';
 import 'package:sudoku/domain/engine/grid_utils.dart';
 import 'package:sudoku/domain/engine/techniques/techniques.dart';
 import 'package:sudoku/domain/models/game_state.dart';
@@ -33,16 +34,6 @@ CoachStep? findCoachStep({
     if (step != null) return step;
   }
   return _fallback(board);
-}
-
-/// All candidates a cell could still hold, given only the placed digits.
-Set<int> possibleCandidates(List<int> values, int index) {
-  if (values[index] != 0) return {};
-  final used = <int>{};
-  for (final p in kGridPeers[index]) {
-    if (values[p] != 0) used.add(values[p]);
-  }
-  return {1, 2, 3, 4, 5, 6, 7, 8, 9}..removeAll(used);
 }
 
 /// Candidates the coach reasons with: everything still possible from the placed

@@ -1,5 +1,5 @@
-import 'package:sudoku/domain/coach/coach.dart';
 import 'package:sudoku/domain/coach/coach_step.dart';
+import 'package:sudoku/domain/engine/candidates.dart';
 import 'package:sudoku/domain/engine/game_utils.dart';
 import 'package:sudoku/domain/engine/grid_utils.dart';
 import 'package:sudoku/domain/models/game_action.dart';

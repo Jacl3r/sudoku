@@ -1,4 +1,4 @@
-import 'package:sudoku/domain/coach/coach.dart';
+import 'package:sudoku/domain/engine/candidates.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 
 /// What part of the game goes into the export.
