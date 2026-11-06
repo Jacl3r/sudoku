@@ -15,6 +15,7 @@ import 'package:sudoku/presentation/widgets/solved_overlay.dart';
 import 'package:sudoku/presentation/widgets/theme_selector.dart';
 import 'package:sudoku/providers/board_notifier.dart';
 import 'package:sudoku/providers/coach_provider.dart';
+import 'package:sudoku/providers/game_command.dart';
 import 'package:sudoku/providers/game_notifier.dart';
 import 'package:sudoku/providers/services_provider.dart';
 import 'package:sudoku/providers/settings_provider.dart';
@@ -32,7 +33,6 @@ class GameScreen extends ConsumerWidget {
     final game = gameAsync.value;
 
     final board = ref.watch(boardProvider);
-    final boardNotifier = ref.read(boardProvider.notifier);
 
     return Scaffold(
       body: SafeArea(
@@ -74,7 +74,7 @@ class GameScreen extends ConsumerWidget {
                     if (modifier) {
                       if (key == LogicalKeyboardKey.keyZ &&
                           !game.puzzleComplete) {
-                        gameNotifier.undo();
+                        gameNotifier.apply(const UndoStep());
                         return .handled;
                       }
                       return .ignored;
@@ -98,13 +98,13 @@ class GameScreen extends ConsumerWidget {
 
                     switch (key) {
                       case .keyU:
-                        gameNotifier.undo();
+                        gameNotifier.apply(const UndoStep());
                         return .handled;
                       case .keyH:
                         showHintSheet(context, ref, gameNotifier);
                         return .handled;
                       case .keyR:
-                        confirmReset(context, gameNotifier, boardNotifier);
+                        confirmReset(context, gameNotifier);
                         return .handled;
                       case .keyE:
                         showExportSheet(context, game);
