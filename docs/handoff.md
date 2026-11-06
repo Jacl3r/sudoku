@@ -21,13 +21,15 @@ clean and light.
 Four steps, each producing a file:
 
 1. **ideation** — an interview until every decision is made. No file.
-2. **to-prd** — one PRD in `docs/prd/`, grounded in the code.
-3. **to-issues** — one plan file per vertical slice in `docs/plans/NNN-slug.md`, with parent,
+2. **to-spec** — one PRD in `docs/prd/`, grounded in the code.
+3. **to-tickets** — one plan file per vertical slice in `docs/plans/NNN-slug.md`, with parent,
    dependencies, scope, acceptance criteria, testing seam and notes.
 4. **implement** one slice, tick its acceptance criteria, and append a Findings section
    describing what changed and what was discovered.
 
-The three skills live in `~/.agents/skills/` and are invoked explicitly.
+The skills live in `~/.agents/skills/` and are invoked explicitly. `to-spec` and `to-tickets`
+accepted `to-prd` and `to-issues` on 2026-11-06; `AGENTS.md` records the tracker
+configuration that keeps their output in `docs/prd/` and `docs/plans/`.
 
 Verification loop for every slice:
 

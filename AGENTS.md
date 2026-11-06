@@ -78,10 +78,16 @@ it whenever it becomes confusing.
 
 ## Issue tracking
 
-- `to-issues` publishes plan files in `docs/plans/`, one per vertical slice, named
+- `to-tickets` publishes one file per ticket in `docs/plans/`, one per vertical slice, named
 `NNN-slug.md` (for example `001-run-locally.md`). Do not create GitHub issues
 on the fork; its tracker is not used for this work. Upstream's tracker and
 Discussions are a different matter, see the consent rule above.
+
+Specs are written by `to-spec` into `docs/prd/`. This is the project's tracker
+configuration for the global skills: local files, `docs/prd/` for the spec and
+`docs/plans/` for the tickets, no triage labels, and no remote tracker. Ignore the
+`to-spec`/`to-tickets` default of `.scratch/`; that is for projects with no
+convention of their own.
 
 PRDs live in `docs/prd/`. `coach-and-export.md` covers the coach, export and resume work
 (slices 001–007). `home-and-settings.md` covers the home screen, import library and
