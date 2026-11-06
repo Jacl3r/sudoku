@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sudoku/domain/models/puzzle.dart';
 import 'package:sudoku/domain/models/sudoku_grid.dart';
+import 'package:sudoku/presentation/shared/board_metrics.dart';
 import 'package:sudoku/presentation/widgets/digit_pad.dart';
 import 'package:sudoku/presentation/widgets/game_layout.dart';
 import 'package:sudoku/presentation/widgets/sudoku_cell.dart';
@@ -73,8 +74,7 @@ class GamePreviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
 
-    final mq = MediaQuery.sizeOf(context);
-    final double gridSize = (mq.width - 16).clamp(0.0, 520.0);
+    final double gridSize = BoardMetrics.byWidth(context).gridSize;
     final cellSize = gridSize / 9;
 
     final values = List<int>.filled(81, 0);
