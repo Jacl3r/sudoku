@@ -21,8 +21,9 @@ class ImportedGame {
   String get key => importKey(id);
 }
 
-/// Index entry: enough to list and order the library without decoding every
-/// saved board.
+/// Index entry: the id and the save time, so the library has an order that does
+/// not depend on scanning the box. Listing still decodes each board to build
+/// the rows, so the index buys ordering, not laziness.
 class ImportIndexEntry {
   const new({required this.id, required this.savedAt});
 

@@ -12,11 +12,23 @@ class FakeSaveGameService implements SaveGameService {
   int saveCalls = 0;
   int deleteCalls = 0;
 
+  String? _lastPlayed;
+
+  @override
+  String? get lastPlayed => _lastPlayed;
+
+  @override
+  bool isLastPlayedKey(Object? key) => false;
+
+  @override
+  bool isLibraryKey(Object? key) => false;
+
   @override
   Future<void> save(GameState state, {String? key}) async {
     saveCalls++;
     final target = key ?? state.difficulty.name;
     _store[target] = state;
+    _lastPlayed = target;
     if (isImportKey(target)) _importDates[target] = DateTime.now();
   }
 
