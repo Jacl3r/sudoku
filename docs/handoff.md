@@ -3,7 +3,7 @@
 Read this first in a new session. It explains what the project is, how we work, where the
 state lives, and what to pick up next.
 
-Last updated: 2026-11-04
+Last updated: 2026-11-08
 
 ## What this project is
 
@@ -83,10 +83,24 @@ Two PRDs, fourteen slices, all implemented:
 | 013 | Undo survives a save: every action type is serialized with the state |
 | 014 | Dead `sharePuzzle` removed |
 
-Current numbers: **154 tests**, `flutter analyze` clean, web build green.
+Current numbers: **189 tests**, `flutter analyze` clean, web build green.
 
-A separate **`multiplayer`** branch exists for a private browser-only co-op experiment (PRD
-`docs/prd/multiplayer.md`, slices 015–018 in `docs/plans/`). It never merges into this branch
+After the slices, eight architecture deepens landed on this branch, one commit each: one
+candidate module (C), `BoardIntent` (E), `apply(GameCommand)` as the only mutation path (D),
+`UndoStep` (B), `BoardMetrics` (F), `openSavedGame()` (G), private save-box keys (H), and
+`findFishPatterns`, which shares the X-Wing/Swordfish geometry between coach and solver
+without sharing their inputs (A2.1). Each was verified with analyze, tests and a web build.
+Seven of the eight candidates from that review are done; the last is still open.
+
+**Export is upstream now.** PR #12 was merged by the maintainer on 2026-11-07 as `493033b`.
+The merge commit's tree is identical to our branch, so he merged it as-is and said he would
+reshape it to fit the rest of the code afterwards. The fork's `main` was fast-forwarded to
+`493033b` on 2026-11-08; no tags were pushed. Our copy on this branch is still the one with
+the share fallback and the extra formats, so it is *not* the file he merged.
+
+A separate **`multiplayer`** branch exists for a private browser-only co-op experiment. Its
+PRD and slices live on that branch only, not here: `docs/prd/multiplayer.md` and
+`docs/plans/015-shared-board.md` to `018-run-a-session.md`. It never merges into this branch
 and is never released; this branch's app is unaffected by it. Nothing from it should be
 cherry-picked here.
 
@@ -100,23 +114,32 @@ whole.
 
 ## Pick up here next session
 
-1. **Phone acceptance pass (highest value).** The toolchain is installed and the debug APK
-   builds. Connect the Pixel 9, enable USB debugging, then `flutter run --profile` and measure
-   the checks that are still unmeasured:
+1. **Multiplayer prototype.** This is the active piece of work. The interview decisions and
+   the slices are on the `multiplayer` branch (`docs/prd/multiplayer.md`, `docs/plans/015`
+   to `018`), not on this one. Nothing has been built yet. The first cut is 015 + 018 (transport, then board sync), with undo/hint/restart
+   hidden until 016.
+2. **Phone acceptance pass.** The toolchain is installed and the debug APK builds, but nothing
+   has run on hardware. No phone was attached on 2026-11-08. Connect the Pixel 9, enable USB
+   debugging, then `flutter run --profile` and measure the checks that are still unmeasured:
    - `nextCoachStep` latency on the device (desktop VM was p95 0.8 ms, max 3.4 ms);
    - the coach bar at 360×640 and at 2× text (grid lands near 168 px — tight);
    - the Android share sheet;
    - the first-run theme sheet on a real install.
-2. **Manual web pass** if the phone is not ready: settings sections and previews; the
+   Note that the export sheet as shipped upstream is not the file on this branch, so its
+   device behaviour is the maintainer's to validate now, not ours.
+3. **Manual web pass** if the phone is not ready: settings sections and previews; the
    five-page carousel, pips and action swapping; the first-run sheet after clearing site
    data; and slice 012 — select a digit and compare the matches, open the coach to a pattern
    to confirm its tint survives, walk every shortcut, and confirm `r` asks before resets.
    For 013: play a few moves, leave the game, reopen it, undo twice.
-3. **Backlog, none urgent**:
+4. **Backlog, none urgent**:
    - Board semantics for screen readers: its own slice, now that a device can judge it.
      There is no `Semantics` in `lib/` today.
    - If 2× text feels cramped, cap the coach bar's growth before shrinking the grid further.
-4. **Committing from here on.** Commit per slice or per session on `daily-driver` and
+   - A2 remaining increments: fish targets must be ordered row-major before the solver can
+     delegate to `findFishPatterns`; then pointing, box/line, naked and hidden subsets,
+     XY-Wing, XYZ-Wing. Skyscraper and Two-String Kite stay coach-only.
+5. **Committing from here on.** Commit per slice or per session on `daily-driver` and
    push to `origin`, which is your fork. Never push to `main` and never create a `v*` tag:
    `fork-android.yml` publishes a signed release on tags. A branch push only runs analyze
    and tests.

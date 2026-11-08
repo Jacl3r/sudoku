@@ -1,7 +1,7 @@
 # Upstream contribution
 
 Read this before touching git remotes, branches or PRs. Rules are also summarised in
-`AGENTS.md`. Last updated: 2026-11-05.
+`AGENTS.md`. Last updated: 2026-11-08.
 
 Upstream is `likhithpraveenk/sudoku`, a hobby app with real users (F-Droid, GitHub
 releases, Obtainium). Anything we send costs its author time and attention, and he never
@@ -121,7 +121,7 @@ Order matters; each step needs its own consent.
 | # | Piece | Branch (off `upstream/main`) | Notes |
 |---|---|---|---|
 | 0 | Ask first | none (a Discussion) | Short note and screenshots, no code in it. Draft: `docs/upstream-draft-discussion.md`. Say no is fine. |
-| 1 | Export sheet | `feat/export-puzzle` (`3e229d9`) | Built and pushed to the fork. Copy-only, two contents (puzzle, progress), three formats, optional AI prompt. The action sits in the game top bar next to the theme picker, because it applies to the whole board. No share channel, no link format, no remembered choice. |
+| 1 | Export sheet | `feat/export-puzzle` | **Merged upstream 2026-11-07 as PR #12 (`493033b`).** Merged as-is, empty diff against the branch. The author said he would reshape it to fit the rest of the code; expect his version to differ from ours.
 | 2 | Turbot Fish fix | none | **Retracted, see below.** Branch deleted. |
 | 3 | Coach | only if he says yes | He dropped a hint system as too complex. A lighter, opt-in version at most. |
 | 4 | Later, small, unevaluated | `feat/...` | Keyboard shortcuts (his `Focus` handler only knows arrows, digits and `p`); persisted undo (touches his own `GameAction` refactor, so ask first). |
@@ -160,6 +160,21 @@ Measured on 56,057 random consistent positions: 0 wrong eliminations from the or
 the "fixed" version found nothing on 56% of positions where the original fired. The
 regression test only passes on a synthetic board that is itself contradictory. Nothing
 was sent upstream. The fix remains in `daily-driver` as a harmless conservative skip.
+
+## State at 2026-11-08
+
+- **PR #12 is merged.** The maintainer merged `feat/export-puzzle` (`63719c3`) on 2026-11-07 as
+  `493033b`. No review comments; one message: *"I'll make some changes so it fits it well with
+  the rest of the code, but its alright. Thank you."* The merge commit's tree is identical to
+  the branch, so nothing was changed before merging.
+- That makes export the first piece of this fork's work to reach upstream users.
+- Fork `main` was fast-forwarded to `493033b` on 2026-11-08. No tags were pushed.
+- **Open decision:** `daily-driver` still carries its own export implementation, which has
+  diverged from what upstream merged (share fallback, link format, extra wording). The rule
+  "when upstream merges a piece, drop our copy from `daily-driver`" now applies, but dropping
+  it would also drop behaviour upstream does not have yet, so this needs a deliberate choice.
+- `feat/export-puzzle` is merged and safe to delete, locally and on the fork. Not deleted yet.
+- No other upstream PRs, issues or Discussions are open from us. PR #11 is closed.
 
 ## State at 2026-11-05
 
