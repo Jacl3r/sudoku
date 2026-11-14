@@ -64,6 +64,10 @@ class Generator {
 
     if (difficulty == .expert && result.bruteForceUsed) return true;
 
+    // The solver got stuck and guessed its way to the end, so no technique the
+    // app knows finishes this puzzle. Only Expert may be that hard.
+    if (result.bruteForceUsed) return false;
+
     if (difficulty == .expert) {
       final startNaked = NakedSingle().getHints(grid).length;
       final startHidden = HiddenSingle().getHints(grid).length;
