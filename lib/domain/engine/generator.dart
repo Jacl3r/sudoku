@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:sudoku/domain/coach/coach_walk.dart';
+import 'package:sudoku/domain/coach/puzzle_score.dart';
 import 'package:sudoku/domain/engine/grid_builder.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
 import 'package:sudoku/domain/engine/solver.dart';
@@ -15,6 +17,10 @@ int noOfCluesForDifficulty(Difficulty difficulty) => switch (difficulty) {
   Difficulty.expert => 20,
 };
 
+/// How many solver-approved puzzles the generator checks against the coach
+/// before it stops insisting.
+const coachAttemptLimit = 40;
+
 class Generator {
   new({Random? random})
     : _builder = GridBuilder(random: random),
@@ -25,15 +31,35 @@ class Generator {
 
   Puzzle _generate(Difficulty difficulty) {
     final solution = _builder.build();
+    var attempts = 0;
     while (true) {
-      final puzzle = _digHoles(SudokuGrid(values: solution.values), difficulty);
-      if (puzzle != null) {
-        return Puzzle(
-          given: SudokuGrid(values: puzzle.values),
-          solution: solution,
-        );
-      }
+      final given = _digHoles(SudokuGrid(values: solution.values), difficulty);
+      if (given == null) continue;
+
+      final puzzle = Puzzle(
+        given: SudokuGrid(values: given.values),
+        solution: solution,
+      );
+      attempts++;
+
+      // Below Expert the coach has to be able to walk the whole puzzle, so a
+      // player never hits a dead end, and the work in that walk has to fit
+      // the difficulty. The cap keeps a coach gap from turning into an
+      // endless search: after it, the solver's verdict is enough.
+      final coachMustApprove =
+          difficulty != Difficulty.expert && attempts <= coachAttemptLimit;
+      if (coachMustApprove && !_coachApproves(puzzle, difficulty)) continue;
+
+      return puzzle;
     }
+  }
+
+  bool _coachApproves(Puzzle puzzle, Difficulty difficulty) {
+    final walk = walkWithCoach(puzzle);
+    if (!walk.finished) return false;
+
+    final band = scoreBandFor(difficulty);
+    return band == null || band.contains(walk.score);
   }
 
   SudokuGrid? _digHoles(SudokuGrid solution, Difficulty difficulty) {
