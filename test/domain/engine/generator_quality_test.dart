@@ -31,78 +31,74 @@ String _stepsBeyondSingles(CoachWalk walk) {
 }
 
 void main() {
-  test(
-    'every generated puzzle fits the difficulty it was asked for',
-    () {
-      final misfits = <Difficulty, List<String>>{};
+  test('every generated puzzle fits the difficulty it was asked for', () {
+    final misfits = <Difficulty, List<String>>{};
 
-      for (final difficulty in Difficulty.values) {
-        final misfitsHere = <String>[];
-        final scores = <int>[];
-        final lines = <String>[];
-        final clueCounts = <int, int>{};
-        var deadEnds = 0;
-        var total = Duration.zero;
-        var slowest = Duration.zero;
+    for (final difficulty in Difficulty.values) {
+      final misfitsHere = <String>[];
+      final scores = <int>[];
+      final lines = <String>[];
+      final clueCounts = <int, int>{};
+      var deadEnds = 0;
+      var total = Duration.zero;
+      var slowest = Duration.zero;
 
-        for (var i = 0; i < _samples; i++) {
-          final watch = Stopwatch()..start();
-          final puzzle = generatePuzzle(difficulty);
-          watch.stop();
-          total += watch.elapsed;
-          if (watch.elapsed > slowest) slowest = watch.elapsed;
+      for (var i = 0; i < _samples; i++) {
+        final watch = Stopwatch()..start();
+        final puzzle = generatePuzzle(difficulty);
+        watch.stop();
+        total += watch.elapsed;
+        if (watch.elapsed > slowest) slowest = watch.elapsed;
 
-          final givens = puzzle.given.values.join();
-          final clues = puzzle.given.values.where((v) => v != 0).length;
-          clueCounts[clues] = (clueCounts[clues] ?? 0) + 1;
+        final givens = puzzle.given.values.join();
+        final clues = puzzle.given.values.where((v) => v != 0).length;
+        clueCounts[clues] = (clueCounts[clues] ?? 0) + 1;
 
-          final grade = gradePuzzle(puzzle);
-          if (!grade.fits(difficulty)) misfitsHere.add(givens);
+        final grade = gradePuzzle(puzzle);
+        if (!grade.fits(difficulty)) misfitsHere.add(givens);
 
-          final score = grade.score;
-          if (score == null) {
-            deadEnds++;
-          } else {
-            scores.add(score);
-          }
-          lines.add(
-            '$givens ${grade.difficulty.displayName} '
-            '${score ?? 'dead end'}: '
-            '${_stepsBeyondSingles(walkWithCoach(puzzle))}',
-          );
+        final score = grade.score;
+        if (score == null) {
+          deadEnds++;
+        } else {
+          scores.add(score);
         }
-
-        misfits[difficulty] = misfitsHere;
-
-        final clueSummary = [
-          for (final count in clueCounts.keys.toList()..sort())
-            '$count clues x${clueCounts[count]}',
-        ].join(', ');
-
-        print('--- ${difficulty.displayName} ($_samples puzzles) ---');
-        print('do not fit: ${misfitsHere.length}');
-        print('coach dead ends: $deadEnds');
-        print(
-          'time per puzzle: avg ${total.inMilliseconds ~/ _samples} ms, '
-          'slowest ${slowest.inMilliseconds} ms',
-        );
-        print('clue counts: $clueSummary');
-        print('coach score: ${_spread(scores)}');
-        for (final line in lines) {
-          print('  $line');
-        }
-      }
-
-      for (final difficulty in Difficulty.values) {
-        expect(
-          misfits[difficulty],
-          isEmpty,
-          reason:
-              '${difficulty.displayName} produced puzzles that do not fit '
-              'that difficulty',
+        lines.add(
+          '$givens ${grade.difficulty.displayName} '
+          '${score ?? 'dead end'}: '
+          '${_stepsBeyondSingles(walkWithCoach(puzzle))}',
         );
       }
-    },
-    timeout: const Timeout(Duration(minutes: 30)),
-  );
+
+      misfits[difficulty] = misfitsHere;
+
+      final clueSummary = [
+        for (final count in clueCounts.keys.toList()..sort())
+          '$count clues x${clueCounts[count]}',
+      ].join(', ');
+
+      print('--- ${difficulty.displayName} ($_samples puzzles) ---');
+      print('do not fit: ${misfitsHere.length}');
+      print('coach dead ends: $deadEnds');
+      print(
+        'time per puzzle: avg ${total.inMilliseconds ~/ _samples} ms, '
+        'slowest ${slowest.inMilliseconds} ms',
+      );
+      print('clue counts: $clueSummary');
+      print('coach score: ${_spread(scores)}');
+      for (final line in lines) {
+        print('  $line');
+      }
+    }
+
+    for (final difficulty in Difficulty.values) {
+      expect(
+        misfits[difficulty],
+        isEmpty,
+        reason:
+            '${difficulty.displayName} produced puzzles that do not fit '
+            'that difficulty',
+      );
+    }
+  }, timeout: const Timeout(Duration(minutes: 30)));
 }

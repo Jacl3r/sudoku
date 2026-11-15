@@ -121,14 +121,8 @@ void main() {
         expect(grade.fits(Difficulty.hard), isFalse, reason: givens);
       }
 
-      expect(
-        _grade(_thinHard).score,
-        lessThan(_grade(_plainHard).score!),
-      );
-      expect(
-        _grade(_longHard).score,
-        greaterThan(_grade(_plainHard).score!),
-      );
+      expect(_grade(_thinHard).score, lessThan(_grade(_plainHard).score!));
+      expect(_grade(_longHard).score, greaterThan(_grade(_plainHard).score!));
     });
 
     test('the looser rule ignores the score', () {
