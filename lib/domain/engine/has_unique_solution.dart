@@ -31,6 +31,9 @@ int _search(List<int> cells, List<Set<int>> candidates, {required int limit}) {
 
     _restore(candidates, snap);
     if ((limit == 1 && count > 0) || count >= limit) {
+      // The branch that worked filled a copy. A caller looking for the
+      // solution needs those digits in its own cells.
+      if (limit == 1) cells.setAll(0, cellsCopy);
       return count;
     }
   }

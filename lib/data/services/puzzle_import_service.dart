@@ -1,5 +1,6 @@
 import 'package:sudoku/data/utils/puzzle_parser.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
+import 'package:sudoku/domain/engine/solver.dart';
 import 'package:sudoku/domain/grading/puzzle_grade.dart';
 import 'package:sudoku/domain/models/game_state.dart';
 import 'package:sudoku/domain/models/puzzle.dart';
@@ -21,11 +22,10 @@ class PuzzleImportService {
         'The puzzle must have exactly one valid solution.',
       );
     }
-    final solution = solveGrid(given);
-    if (solution == null) {
-      throw const FormatException('The puzzle has no solution.');
-    }
-    final puzzle = Puzzle(given: given, solution: solution);
+    final puzzle = Puzzle(
+      given: given,
+      solution: solveLogically(given).solvedGrid,
+    );
     return GameState.newGame(
       puzzle: puzzle,
       difficulty: gradePuzzle(puzzle).difficulty,
