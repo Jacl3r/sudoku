@@ -22,133 +22,129 @@ String _spread(List<int> values) {
 }
 
 void main() {
-  test(
-    'puzzles below Expert are finishable and inside their score band',
-    () {
-      final stuck = <Difficulty, List<String>>{};
-      final coachDeadEnds = <Difficulty, List<String>>{};
-      final outOfBand = <Difficulty, List<int>>{};
-      final unscored = <String>{};
+  test('puzzles below Expert are finishable and inside their score band', () {
+    final stuck = <Difficulty, List<String>>{};
+    final coachDeadEnds = <Difficulty, List<String>>{};
+    final outOfBand = <Difficulty, List<int>>{};
+    final unscored = <String>{};
 
-      for (final difficulty in Difficulty.values) {
-        final stuckHere = <String>[];
-        final deadEndsHere = <String>[];
-        final scores = <int>[];
-        final walkLines = <String>[];
-        final clueCounts = <int, int>{};
-        final techniqueCounts = <String, int>{};
-        var total = Duration.zero;
-        var slowest = Duration.zero;
+    for (final difficulty in Difficulty.values) {
+      final stuckHere = <String>[];
+      final deadEndsHere = <String>[];
+      final scores = <int>[];
+      final walkLines = <String>[];
+      final clueCounts = <int, int>{};
+      final techniqueCounts = <String, int>{};
+      var total = Duration.zero;
+      var slowest = Duration.zero;
 
-        for (var i = 0; i < _samples; i++) {
-          final watch = Stopwatch()..start();
-          final puzzle = generatePuzzle(difficulty);
-          watch.stop();
-          total += watch.elapsed;
-          if (watch.elapsed > slowest) slowest = watch.elapsed;
+      for (var i = 0; i < _samples; i++) {
+        final watch = Stopwatch()..start();
+        final puzzle = generatePuzzle(difficulty);
+        watch.stop();
+        total += watch.elapsed;
+        if (watch.elapsed > slowest) slowest = watch.elapsed;
 
-          final values = puzzle.given.values;
-          final clues = values.where((v) => v != 0).length;
-          clueCounts[clues] = (clueCounts[clues] ?? 0) + 1;
+        final values = puzzle.given.values;
+        final clues = values.where((v) => v != 0).length;
+        clueCounts[clues] = (clueCounts[clues] ?? 0) + 1;
 
-          final result = solveLogically(puzzle.given);
-          if (result.bruteForceUsed) stuckHere.add(values.join());
+        final result = solveLogically(puzzle.given);
+        if (result.bruteForceUsed) stuckHere.add(values.join());
 
-          final walk = walkWithCoach(puzzle);
-          if (walk.finished) {
-            scores.add(walk.score);
-          } else {
-            deadEndsHere.add(values.join());
-          }
-          final steps = <String, int>{};
-          for (final technique in walk.techniques) {
-            if (!techniqueScores.containsKey(technique)) {
-              unscored.add(technique);
-            }
-            if (technique.endsWith('Single')) continue;
-            steps[technique] = (steps[technique] ?? 0) + 1;
-          }
-          walkLines.add(
-            '${walk.finished ? walk.score : 'dead end'}: '
-            '${[for (final e in steps.entries) '${e.key} x${e.value}'].join(', ')}',
-          );
-          for (final technique in result.techniquesApplied.toSet()) {
-            final name = '$technique';
-            techniqueCounts[name] = (techniqueCounts[name] ?? 0) + 1;
-          }
+        final walk = walkWithCoach(puzzle);
+        if (walk.finished) {
+          scores.add(walk.score);
+        } else {
+          deadEndsHere.add(values.join());
         }
-
-        final band = scoreBandFor(difficulty);
-        outOfBand[difficulty] = [
-          for (final score in scores)
-            if (band != null && !band.contains(score)) score,
-        ];
-        stuck[difficulty] = stuckHere;
-        coachDeadEnds[difficulty] = deadEndsHere;
-
-        final clueSummary = [
-          for (final count in clueCounts.keys.toList()..sort())
-            '$count clues x${clueCounts[count]}',
-        ].join(', ');
-        final techniqueSummary = [
-          for (final name in techniqueCounts.keys.toList()..sort())
-            '$name x${techniqueCounts[name]}',
-        ].join(', ');
-
-        print('--- ${difficulty.displayName} ($_samples puzzles) ---');
-        print('stuck without guessing: ${stuckHere.length}');
-        print('coach dead ends: ${deadEndsHere.length}');
-        print(
-          'time per puzzle: avg ${total.inMilliseconds ~/ _samples} ms, '
-          'slowest ${slowest.inMilliseconds} ms',
+        final steps = <String, int>{};
+        for (final technique in walk.techniques) {
+          if (!techniqueScores.containsKey(technique)) {
+            unscored.add(technique);
+          }
+          if (technique.endsWith('Single')) continue;
+          steps[technique] = (steps[technique] ?? 0) + 1;
+        }
+        walkLines.add(
+          '${walk.finished ? walk.score : 'dead end'}: '
+          '${[for (final e in steps.entries) '${e.key} x${e.value}'].join(', ')}',
         );
-        print('clue counts: $clueSummary');
-        print('coach score: ${_spread(scores)}');
-        for (final line in walkLines) {
-          print('  walk $line');
-        }
-        print('puzzles using each technique: $techniqueSummary');
-        for (final puzzle in stuckHere) {
-          print('  stuck: $puzzle');
-        }
-        for (final puzzle in deadEndsHere) {
-          print('  coach dead end: $puzzle');
+        for (final technique in result.techniquesApplied.toSet()) {
+          final name = '$technique';
+          techniqueCounts[name] = (techniqueCounts[name] ?? 0) + 1;
         }
       }
 
-      expect(
-        unscored,
-        isEmpty,
-        reason: 'these coach techniques have no entry in techniqueScores',
+      final band = scoreBandFor(difficulty);
+      outOfBand[difficulty] = [
+        for (final score in scores)
+          if (band != null && !band.contains(score)) score,
+      ];
+      stuck[difficulty] = stuckHere;
+      coachDeadEnds[difficulty] = deadEndsHere;
+
+      final clueSummary = [
+        for (final count in clueCounts.keys.toList()..sort())
+          '$count clues x${clueCounts[count]}',
+      ].join(', ');
+      final techniqueSummary = [
+        for (final name in techniqueCounts.keys.toList()..sort())
+          '$name x${techniqueCounts[name]}',
+      ].join(', ');
+
+      print('--- ${difficulty.displayName} ($_samples puzzles) ---');
+      print('stuck without guessing: ${stuckHere.length}');
+      print('coach dead ends: ${deadEndsHere.length}');
+      print(
+        'time per puzzle: avg ${total.inMilliseconds ~/ _samples} ms, '
+        'slowest ${slowest.inMilliseconds} ms',
       );
-
-      // Expert is allowed to be harder than the solver and the coach. The
-      // others are not.
-      for (final difficulty in Difficulty.values) {
-        if (difficulty == Difficulty.expert) continue;
-        expect(
-          stuck[difficulty],
-          isEmpty,
-          reason:
-              '${difficulty.displayName} produced puzzles that no technique '
-              'in the app can finish',
-        );
-        expect(
-          coachDeadEnds[difficulty],
-          isEmpty,
-          reason:
-              '${difficulty.displayName} produced puzzles the coach cannot '
-              'walk to the end',
-        );
-        expect(
-          outOfBand[difficulty],
-          isEmpty,
-          reason:
-              '${difficulty.displayName} produced puzzles whose coach score '
-              'is outside its band',
-        );
+      print('clue counts: $clueSummary');
+      print('coach score: ${_spread(scores)}');
+      for (final line in walkLines) {
+        print('  walk $line');
       }
-    },
-    timeout: const Timeout(Duration(minutes: 30)),
-  );
+      print('puzzles using each technique: $techniqueSummary');
+      for (final puzzle in stuckHere) {
+        print('  stuck: $puzzle');
+      }
+      for (final puzzle in deadEndsHere) {
+        print('  coach dead end: $puzzle');
+      }
+    }
+
+    expect(
+      unscored,
+      isEmpty,
+      reason: 'these coach techniques have no entry in techniqueScores',
+    );
+
+    // Expert is allowed to be harder than the solver and the coach. The
+    // others are not.
+    for (final difficulty in Difficulty.values) {
+      if (difficulty == Difficulty.expert) continue;
+      expect(
+        stuck[difficulty],
+        isEmpty,
+        reason:
+            '${difficulty.displayName} produced puzzles that no technique '
+            'in the app can finish',
+      );
+      expect(
+        coachDeadEnds[difficulty],
+        isEmpty,
+        reason:
+            '${difficulty.displayName} produced puzzles the coach cannot '
+            'walk to the end',
+      );
+      expect(
+        outOfBand[difficulty],
+        isEmpty,
+        reason:
+            '${difficulty.displayName} produced puzzles whose coach score '
+            'is outside its band',
+      );
+    }
+  }, timeout: const Timeout(Duration(minutes: 30)));
 }
