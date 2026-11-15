@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:sudoku/domain/coach/coach_step.dart';
+import 'package:sudoku/domain/coach/coach_technique.dart';
 import 'package:sudoku/domain/engine/candidates.dart';
 import 'package:sudoku/domain/engine/fish_pattern.dart';
 import 'package:sudoku/domain/engine/grid_utils.dart';
@@ -174,7 +175,7 @@ CoachStep? _findMistake(
       final box = getBox(i);
       return CoachStep(
         headline: 'Something on the board is off.',
-        technique: 'Mistake',
+        mistakeName: 'Mistake',
         about:
             'One of your digits does not fit the solution. '
             'Everything built on it will lead nowhere.',
@@ -194,7 +195,7 @@ CoachStep? _findMistake(
       final box = getBox(i);
       return CoachStep(
         headline: 'One of your notes went too far.',
-        technique: 'Note removed too early',
+        mistakeName: 'Note removed too early',
         about:
             'A candidate was removed that is still possible. '
             'Steps based on it can be wrong.',
@@ -232,7 +233,7 @@ CoachStep? _hiddenSingle(CoachBoard b) {
       final cell = cells.first;
       return CoachStep(
         headline: 'There is a Hidden Single.',
-        technique: 'Hidden Single',
+        kind: CoachTechnique.hiddenSingle,
         about: _hiddenSingleAbout,
         nudge: 'Look at where $d can go in ${unitName(u)}.',
         explanation:
@@ -257,7 +258,7 @@ CoachStep? _nakedSingle(CoachBoard b) {
     final box = getBox(i);
     return CoachStep(
       headline: 'There is a Naked Single.',
-      technique: 'Naked Single',
+      kind: CoachTechnique.nakedSingle,
       about: 'A cell with only one candidate left.',
       nudge: 'One cell in box ${box + 1} has only one option left.',
       explanation:
@@ -294,7 +295,9 @@ CoachStep? _pointing(CoachBoard b) {
         final lineName = unitName(lineIndex);
         return CoachStep(
           headline: 'Look for a Pointing Pair.',
-          technique: cells.length == 2 ? 'Pointing Pair' : 'Pointing Triple',
+          kind: cells.length == 2
+              ? CoachTechnique.pointingPair
+              : CoachTechnique.pointingTriple,
           about:
               'When a digit inside a box is limited to one row or column, '
               'it cannot appear anywhere else on that line.',
@@ -329,7 +332,7 @@ CoachStep? _boxLineReduction(CoachBoard b) {
       if (targets.isEmpty) continue;
       return CoachStep(
         headline: 'Look for a Box/Line Reduction.',
-        technique: 'Box/Line Reduction',
+        kind: CoachTechnique.boxLineReduction,
         about:
             'When a digit in a row or column is limited to one box, '
             'it cannot appear anywhere else in that box.',
@@ -375,7 +378,7 @@ CoachStep? _nakedSubset(CoachBoard b, int n) {
       final count = n == 2 ? 'two' : 'three';
       return CoachStep(
         headline: 'Look for a Naked $word.',
-        technique: 'Naked $word',
+        kind: n == 2 ? CoachTechnique.nakedPair : CoachTechnique.nakedTriple,
         about:
             'When $count cells in a house only hold the same $count '
             'digits, those digits are locked into them.',
@@ -416,7 +419,7 @@ CoachStep? _hiddenSubset(CoachBoard b, int n) {
       final count = n == 2 ? 'two' : 'three';
       return CoachStep(
         headline: 'Look for a Hidden $word.',
-        technique: 'Hidden $word',
+        kind: n == 2 ? CoachTechnique.hiddenPair : CoachTechnique.hiddenTriple,
         about:
             'When $count digits only fit in the same $count cells of a '
             'house, those cells cannot hold anything else.',
@@ -458,7 +461,7 @@ CoachStep? _fish(CoachBoard b, int n) {
         );
         return CoachStep(
           headline: 'Look for an $name.',
-          technique: name,
+          kind: n == 2 ? CoachTechnique.xWing : CoachTechnique.swordfish,
           about: n == 2
               ? 'A digit limited to the same two columns in two rows (or the '
                     'other way round) forms a rectangle. It has to take both '
@@ -511,7 +514,7 @@ CoachStep? _skyscraper(CoachBoard b) {
               final cw = byRow ? 'column' : 'row';
               return CoachStep(
                 headline: 'Look for a Skyscraper.',
-                technique: 'Skyscraper',
+                kind: CoachTechnique.skyscraper,
                 about:
                     'Two rows (or columns) each have a digit in exactly '
                     'two cells, and one end of each lines up. One of the '
@@ -572,7 +575,7 @@ CoachStep? _twoStringKite(CoachBoard b) {
             final box = getBox(rEnd) + 1;
             return CoachStep(
               headline: 'Look for a Two-String Kite.',
-              technique: 'Two-String Kite',
+              kind: CoachTechnique.twoStringKite,
               about:
                   'A row and a column each have a digit in exactly two '
                   'cells, and they meet in one box. One of the two free '
@@ -627,7 +630,7 @@ CoachStep? _xyWing(CoachBoard b) {
         if (targets.isEmpty) continue;
         return CoachStep(
           headline: 'Look for an XY-Wing.',
-          technique: 'XY-Wing',
+          kind: CoachTechnique.xyWing,
           about:
               'A cell with two candidates (the pivot) sees two other '
               'two-candidate cells. Each wing shares one digit with the '
@@ -672,7 +675,7 @@ CoachStep? _xyzWing(CoachBoard b) {
       if (targets.isEmpty) continue;
       return CoachStep(
         headline: 'Look for an XYZ-Wing.',
-        technique: 'XYZ-Wing',
+        kind: CoachTechnique.xyzWing,
         about:
             'Like an XY-Wing, but the pivot holds all three digits. '
             'Only cells that see the pivot and both wings are affected.',
@@ -699,21 +702,22 @@ CoachStep? _xyzWing(CoachBoard b) {
 
 CoachStep? _fallback(CoachBoard b) {
   final grid = b.toGrid();
-  final extra = <String, SudokuTechnique>{
-    'Simple Coloring': SimpleColoring(),
-    'Naked Quad': NakedQuad(),
-    'Jellyfish': Jellyfish(),
-    'Hidden Quad': HiddenQuad(),
+  final extra = <CoachTechnique, SudokuTechnique>{
+    CoachTechnique.simpleColoring: SimpleColoring(),
+    CoachTechnique.nakedQuad: NakedQuad(),
+    CoachTechnique.jellyfish: Jellyfish(),
+    CoachTechnique.hiddenQuad: HiddenQuad(),
   };
   for (final entry in extra.entries) {
     final hints = entry.value.getHints(grid);
     if (hints.isEmpty) continue;
     final hint = hints.first;
-    final name = entry.key;
+    final kind = entry.key;
+    final name = kind.label;
     if (hint is DirectHint) {
       return CoachStep(
         headline: 'Look for $name.',
-        technique: name,
+        kind: kind,
         about:
             'An advanced technique. The coach can name it but not '
             'draw it yet.',
@@ -731,7 +735,7 @@ CoachStep? _fallback(CoachBoard b) {
       if (digits.isEmpty) continue;
       return CoachStep(
         headline: 'Look for $name.',
-        technique: name,
+        kind: kind,
         about:
             'An advanced technique. The coach can name it but not '
             'draw it yet.',

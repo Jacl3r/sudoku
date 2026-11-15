@@ -3,13 +3,12 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sudoku/domain/coach/coach_walk.dart';
-import 'package:sudoku/domain/coach/puzzle_score.dart';
 import 'package:sudoku/domain/engine/generator.dart';
-import 'package:sudoku/domain/engine/solver.dart';
+import 'package:sudoku/domain/grading/puzzle_grade.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 
 /// Puzzles sampled per difficulty. Raise it for steadier numbers.
-const _samples = 20;
+const _samples = 60;
 
 /// Lowest, the 10th, 25th, 50th, 75th and 90th percentile, and highest.
 String _spread(List<int> values) {
@@ -21,22 +20,28 @@ String _spread(List<int> values) {
       'max ${sorted.last} (${sorted.length} puzzles)';
 }
 
+/// The steps beyond singles in the coach's walk, e.g. "Skyscraper x1".
+String _stepsBeyondSingles(CoachWalk walk) {
+  final steps = <String, int>{};
+  for (final technique in walk.techniques) {
+    if (technique.label.endsWith('Single')) continue;
+    steps[technique.label] = (steps[technique.label] ?? 0) + 1;
+  }
+  return [for (final e in steps.entries) '${e.key} x${e.value}'].join(', ');
+}
+
 void main() {
   test(
-    'puzzles below Expert are finishable and inside their score band',
+    'every generated puzzle fits the difficulty it was asked for',
     () {
-      final stuck = <Difficulty, List<String>>{};
-      final coachDeadEnds = <Difficulty, List<String>>{};
-      final outOfBand = <Difficulty, List<int>>{};
-      final unscored = <String>{};
+      final misfits = <Difficulty, List<String>>{};
 
       for (final difficulty in Difficulty.values) {
-        final stuckHere = <String>[];
-        final deadEndsHere = <String>[];
+        final misfitsHere = <String>[];
         final scores = <int>[];
-        final walkLines = <String>[];
+        final lines = <String>[];
         final clueCounts = <int, int>{};
-        final techniqueCounts = <String, int>{};
+        var deadEnds = 0;
         var total = Duration.zero;
         var slowest = Duration.zero;
 
@@ -47,105 +52,54 @@ void main() {
           total += watch.elapsed;
           if (watch.elapsed > slowest) slowest = watch.elapsed;
 
-          final values = puzzle.given.values;
-          final clues = values.where((v) => v != 0).length;
+          final givens = puzzle.given.values.join();
+          final clues = puzzle.given.values.where((v) => v != 0).length;
           clueCounts[clues] = (clueCounts[clues] ?? 0) + 1;
 
-          final result = solveLogically(puzzle.given);
-          if (result.bruteForceUsed) stuckHere.add(values.join());
+          final grade = gradePuzzle(puzzle);
+          if (!grade.fits(difficulty)) misfitsHere.add(givens);
 
-          final walk = walkWithCoach(puzzle);
-          if (walk.finished) {
-            scores.add(walk.score);
+          final score = grade.score;
+          if (score == null) {
+            deadEnds++;
           } else {
-            deadEndsHere.add(values.join());
+            scores.add(score);
           }
-          final steps = <String, int>{};
-          for (final technique in walk.techniques) {
-            if (!techniqueScores.containsKey(technique)) {
-              unscored.add(technique);
-            }
-            if (technique.endsWith('Single')) continue;
-            steps[technique] = (steps[technique] ?? 0) + 1;
-          }
-          walkLines.add(
-            '${walk.finished ? walk.score : 'dead end'}: '
-            '${[for (final e in steps.entries) '${e.key} x${e.value}'].join(', ')}',
+          lines.add(
+            '$givens ${grade.difficulty.displayName} '
+            '${score ?? 'dead end'}: '
+            '${_stepsBeyondSingles(walkWithCoach(puzzle))}',
           );
-          for (final technique in result.techniquesApplied.toSet()) {
-            final name = '$technique';
-            techniqueCounts[name] = (techniqueCounts[name] ?? 0) + 1;
-          }
         }
 
-        final band = scoreBandFor(difficulty);
-        outOfBand[difficulty] = [
-          for (final score in scores)
-            if (band != null && !band.contains(score)) score,
-        ];
-        stuck[difficulty] = stuckHere;
-        coachDeadEnds[difficulty] = deadEndsHere;
+        misfits[difficulty] = misfitsHere;
 
         final clueSummary = [
           for (final count in clueCounts.keys.toList()..sort())
             '$count clues x${clueCounts[count]}',
         ].join(', ');
-        final techniqueSummary = [
-          for (final name in techniqueCounts.keys.toList()..sort())
-            '$name x${techniqueCounts[name]}',
-        ].join(', ');
 
         print('--- ${difficulty.displayName} ($_samples puzzles) ---');
-        print('stuck without guessing: ${stuckHere.length}');
-        print('coach dead ends: ${deadEndsHere.length}');
+        print('do not fit: ${misfitsHere.length}');
+        print('coach dead ends: $deadEnds');
         print(
           'time per puzzle: avg ${total.inMilliseconds ~/ _samples} ms, '
           'slowest ${slowest.inMilliseconds} ms',
         );
         print('clue counts: $clueSummary');
         print('coach score: ${_spread(scores)}');
-        for (final line in walkLines) {
-          print('  walk $line');
-        }
-        print('puzzles using each technique: $techniqueSummary');
-        for (final puzzle in stuckHere) {
-          print('  stuck: $puzzle');
-        }
-        for (final puzzle in deadEndsHere) {
-          print('  coach dead end: $puzzle');
+        for (final line in lines) {
+          print('  $line');
         }
       }
 
-      expect(
-        unscored,
-        isEmpty,
-        reason: 'these coach techniques have no entry in techniqueScores',
-      );
-
-      // Expert is allowed to be harder than the solver and the coach. The
-      // others are not.
       for (final difficulty in Difficulty.values) {
-        if (difficulty == Difficulty.expert) continue;
         expect(
-          stuck[difficulty],
+          misfits[difficulty],
           isEmpty,
           reason:
-              '${difficulty.displayName} produced puzzles that no technique '
-              'in the app can finish',
-        );
-        expect(
-          coachDeadEnds[difficulty],
-          isEmpty,
-          reason:
-              '${difficulty.displayName} produced puzzles the coach cannot '
-              'walk to the end',
-        );
-        expect(
-          outOfBand[difficulty],
-          isEmpty,
-          reason:
-              '${difficulty.displayName} produced puzzles whose coach score '
-              'is outside its band',
+              '${difficulty.displayName} produced puzzles that do not fit '
+              'that difficulty',
         );
       }
     },

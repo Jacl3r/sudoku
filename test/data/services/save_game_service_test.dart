@@ -6,6 +6,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:sudoku/data/hive_boxes.dart';
 import 'package:sudoku/data/services/save_game_service.dart';
 import 'package:sudoku/domain/coach/coach_step.dart';
+import 'package:sudoku/domain/coach/coach_technique.dart';
 import 'package:sudoku/domain/engine/game_engine.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/game_assists.dart';
@@ -149,7 +150,7 @@ void main() {
     final service = SaveGameService();
     const step = CoachStep(
       headline: 'Look for a Skyscraper.',
-      technique: 'Skyscraper',
+      kind: CoachTechnique.skyscraper,
       about: 'about',
       nudge: 'nudge',
       explanation: 'explanation',

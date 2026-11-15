@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sudoku/domain/coach/coach_technique.dart';
 import 'package:sudoku/domain/coach/coach_walk.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
 import 'package:sudoku/domain/models/puzzle.dart';
@@ -17,11 +18,11 @@ Puzzle _puzzle(String givens) {
 }
 
 void main() {
-  group('coachCanFinish', () {
+  group('walkWithCoach', () {
     test('walks a singles-only puzzle to the end', () {
       final puzzle = _puzzle(_singlesOnly);
 
-      expect(coachCanFinish(puzzle), isTrue);
+      expect(walkWithCoach(puzzle).finished, isTrue);
     });
 
     test('reports a dead end on a puzzle that needs chains', () {
@@ -29,13 +30,31 @@ void main() {
       // solution, but needs chain techniques the coach does not know.
       final puzzle = _puzzle(_needsChains);
 
-      expect(coachCanFinish(puzzle), isFalse);
+      expect(walkWithCoach(puzzle).finished, isFalse);
+    });
+
+    test('scores a singles-only walk as the sum of its singles', () {
+      final walk = walkWithCoach(_puzzle(_singlesOnly));
+      final empty = _singlesOnly.split('').where((c) => c == '0').length;
+
+      expect(walk.techniques, hasLength(empty));
+      expect(
+        walk.score,
+        walk.techniques.fold<int>(0, (sum, t) => sum + t.score),
+      );
+      expect(
+        walk.techniques.toSet().difference({
+          CoachTechnique.hiddenSingle,
+          CoachTechnique.nakedSingle,
+        }),
+        isEmpty,
+      );
     });
 
     test('leaves the puzzle it was given untouched', () {
       final puzzle = _puzzle(_singlesOnly);
 
-      coachCanFinish(puzzle);
+      walkWithCoach(puzzle);
 
       expect(puzzle.given.toString81(), _singlesOnly);
     });

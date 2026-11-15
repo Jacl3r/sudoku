@@ -41,3 +41,5 @@ guessing. Those boards have one solution, but need techniques the app does not k
   `dart format .` and the tests locally before relying on it.
 - If the quality test ever reports coach dead ends, the cap was hit: the coach is missing
   something the solver can do, and the coverage test should be extended to show what.
+- 021 moved these rules into `lib/domain/grading/puzzle_grade.dart`. `coachCanFinish`,
+  `coachAttemptLimit` and `_meetsTargetDifficulty` are the names from before that.
