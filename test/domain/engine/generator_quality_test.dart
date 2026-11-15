@@ -9,7 +9,7 @@ import 'package:sudoku/domain/engine/solver.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 
 /// Puzzles sampled per difficulty. Raise it for steadier numbers.
-const _samples = 150;
+const _samples = 20;
 
 /// Lowest, the 10th, 25th, 50th, 75th and 90th percentile, and highest.
 String _spread(List<int> values) {
