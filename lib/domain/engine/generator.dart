@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:sudoku/domain/coach/coach_walk.dart';
 import 'package:sudoku/domain/engine/grid_builder.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
 import 'package:sudoku/domain/engine/solver.dart';
@@ -15,6 +16,10 @@ int noOfCluesForDifficulty(Difficulty difficulty) => switch (difficulty) {
   Difficulty.expert => 20,
 };
 
+/// How many solver-approved puzzles the generator checks against the coach
+/// before it stops insisting.
+const coachAttemptLimit = 40;
+
 class Generator {
   new({Random? random})
     : _builder = GridBuilder(random: random),
@@ -25,14 +30,25 @@ class Generator {
 
   Puzzle _generate(Difficulty difficulty) {
     final solution = _builder.build();
+    var attempts = 0;
     while (true) {
-      final puzzle = _digHoles(SudokuGrid(values: solution.values), difficulty);
-      if (puzzle != null) {
-        return Puzzle(
-          given: SudokuGrid(values: puzzle.values),
-          solution: solution,
-        );
-      }
+      final given = _digHoles(SudokuGrid(values: solution.values), difficulty);
+      if (given == null) continue;
+
+      final puzzle = Puzzle(
+        given: SudokuGrid(values: given.values),
+        solution: solution,
+      );
+      attempts++;
+
+      // Below Expert the coach has to be able to walk the whole puzzle, so a
+      // player never hits a dead end. The cap keeps a coach gap from turning
+      // into an endless search: after it, the solver's verdict is enough.
+      final coachMustFinish =
+          difficulty != Difficulty.expert && attempts <= coachAttemptLimit;
+      if (coachMustFinish && !coachCanFinish(puzzle)) continue;
+
+      return puzzle;
     }
   }
 
@@ -63,6 +79,10 @@ class Generator {
     final result = solveLogically(grid);
 
     if (difficulty == .expert && result.bruteForceUsed) return true;
+
+    // The solver got stuck and guessed its way to the end, so no technique the
+    // app knows finishes this puzzle. Only Expert may be that hard.
+    if (result.bruteForceUsed) return false;
 
     if (difficulty == .expert) {
       final startNaked = NakedSingle().getHints(grid).length;

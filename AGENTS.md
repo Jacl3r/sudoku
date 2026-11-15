@@ -108,6 +108,10 @@ settings redesign (slices 008–011) and is the active one.
   Skyscraper and Two-String Kite rather than by the upstream `TurbotFish`. The
   upstream class is sound (see `docs/upstream-contribution.md`, "Turbot Fish
   retracted"); the coach just does not delegate to it.
+- Generated puzzles below Expert must be finishable by the coach. The generator
+  rejects a puzzle the solver only finished by brute force, and one the coach
+  cannot walk to the end (`docs/plans/019-coachable-generator.md`). Expert may
+  still end in a coach dead end.
 - The home screen shows a resume card for the most recent save, and the
   difficulty selector remembers the last played difficulty.
 - X-Chains and XY-Chains are out of scope for now.
