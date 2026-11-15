@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
+import 'package:sudoku/domain/engine/solver.dart';
 import 'package:sudoku/domain/models/sudoku_grid.dart';
 
 import '../../helpers/sudoku_grids.dart';
@@ -25,6 +26,18 @@ void main() {
         final given = givens.codeUnitAt(i) - 48;
         if (given != 0) expect(solved.values[i], given);
       }
+    });
+
+    test('the logical solver hands back the whole solution after guessing', () {
+      const givens =
+          '029600050040920070000005900000040020005003800010000700080000000103002507702000010';
+      final result = solveLogically(SudokuGrid.fromString(givens));
+
+      expect(result.bruteForceUsed, isTrue);
+      expect(
+        result.solvedGrid.values,
+        solveGrid(SudokuGrid.fromString(givens))!.values,
+      );
     });
 
     test('returns null for unsolvable puzzle', () {

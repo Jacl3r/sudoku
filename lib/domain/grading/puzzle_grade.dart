@@ -44,9 +44,14 @@ class PuzzleGrade {
   /// Whether this puzzle is a good one to hand out as [target]: the right
   /// level, an opening that suits it, and below Expert a walk the coach can
   /// finish with a score inside the band for that level.
+  ///
+  /// Expert may end in a coach dead end. An Expert puzzle the coach can finish
+  /// must not be lighter than a Hard one.
   bool fits(Difficulty target) {
     if (!fitsLoosely(target)) return false;
-    if (target == Difficulty.expert) return true;
+    if (target == Difficulty.expert) {
+      return !_walk.finished || _walk.score >= _hardFloor;
+    }
     return _walk.finished && _scoreFits(target, _walk.score);
   }
 
@@ -68,17 +73,21 @@ class PuzzleGrade {
   }
 }
 
+/// The lowest score a Hard puzzle may have. An Expert puzzle the coach can
+/// finish has to reach it too.
+const _hardFloor = 1100;
+
 /// The score band for each level.
 ///
 /// The bands come from 150 generated puzzles per level. Easy sits at about
 /// 630 by itself. Medium below 780 is a single locked-candidates step on top
 /// of singles, and Hard below 1100 is a single advanced step on top of
 /// singles, so both floors ask for a little more than that. The ceilings cut
-/// the long grind at the top. Expert is not held to a score, because the coach
-/// often cannot walk it at all.
+/// the long grind at the top. Expert has no band, because the coach often
+/// cannot walk it at all. It only shares Hard's floor, see [PuzzleGrade.fits].
 bool _scoreFits(Difficulty target, int score) => switch (target) {
   Difficulty.easy => true,
   Difficulty.medium => score >= 780 && score <= 1000,
-  Difficulty.hard => score >= 1100 && score <= 1600,
+  Difficulty.hard => score >= _hardFloor && score <= 1600,
   Difficulty.expert => true,
 };

@@ -43,6 +43,14 @@ const _longHard =
 const _tightHard =
     '052009000300001095900000000090305071030900006700010000000500809045800000200000000';
 
+/// The original solver has no Two-String Kite, so it gets stuck on these two.
+/// The coach finishes both with one. The first is lighter than any Hard.
+const _lightKite =
+    '500900000000005100760080200000041305000000000080200010090057003008400000000010640';
+
+const _solidKite =
+    '000070300007050020300040009605030000001000800820600005018003007293700050000100000';
+
 PuzzleGrade _grade(String givens) {
   final given = SudokuGrid.fromString(givens);
   final solution = solveGrid(SudokuGrid.fromString(givens));
@@ -137,6 +145,30 @@ void main() {
       expect(grade.fits(Difficulty.expert), isTrue);
     });
 
+    test('the solver can get stuck where the coach finishes', () {
+      for (final givens in [_lightKite, _solidKite]) {
+        final grade = _grade(givens);
+
+        expect(grade.difficulty, Difficulty.expert, reason: givens);
+        expect(grade.coachable, isTrue, reason: givens);
+      }
+    });
+
+    test('Expert takes a dead end, and a walk as heavy as a Hard one', () {
+      expect(_grade(_stuckAfterHard).fits(Difficulty.expert), isTrue);
+      expect(_grade(_solidKite).fits(Difficulty.expert), isTrue);
+      expect(_grade(_tightHard).fits(Difficulty.expert), isTrue);
+    });
+
+    test('Expert does not take a puzzle the coach finishes too easily', () {
+      for (final givens in [_thinHard, _lightKite]) {
+        final grade = _grade(givens);
+
+        expect(grade.fits(Difficulty.expert), isFalse, reason: givens);
+        expect(grade.fitsLoosely(Difficulty.expert), isTrue, reason: givens);
+      }
+    });
+
     test('whatever fits also fits loosely', () {
       for (final givens in [
         _singlesOnly,
@@ -147,6 +179,8 @@ void main() {
         _thinHard,
         _longHard,
         _tightHard,
+        _lightKite,
+        _solidKite,
       ]) {
         final grade = _grade(givens);
 

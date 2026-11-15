@@ -17,6 +17,7 @@ void main() {
 
         final solutionGrid = solveGrid(grid);
         expect(solutionGrid, isNotNull);
+        expect(puzzle.solution.values, solutionGrid?.values);
 
         for (var i = 0; i < 81; i++) {
           final value = puzzle.given.values[i];

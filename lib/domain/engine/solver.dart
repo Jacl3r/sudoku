@@ -1,4 +1,4 @@
-import 'package:sudoku/domain/engine/grid_utils.dart';
+import 'package:sudoku/domain/engine/has_unique_solution.dart';
 import 'package:sudoku/domain/engine/techniques/techniques.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 import 'package:sudoku/domain/models/solver_result.dart';
@@ -25,47 +25,15 @@ SolverResult solveLogically(SudokuGrid grid) {
     }
   } while (progress && !gridCopy.isSolved());
 
+  // When the techniques run out, the rest of the solution comes from the
+  // search. The half-solved grid is only kept if the puzzle has no solution.
   final bruteForceUsed = !gridCopy.isSolved();
-  if (bruteForceUsed) {
-    _bruteForceSolve(gridCopy);
-  }
+  final solvedGrid = bruteForceUsed ? solveGrid(grid) ?? gridCopy : gridCopy;
 
   return SolverResult(
     highestDifficultyLevel: highestLevel,
     techniquesApplied: techniquesApplied,
     bruteForceUsed: bruteForceUsed,
-    solvedGrid: gridCopy,
+    solvedGrid: solvedGrid,
   );
-}
-
-bool _bruteForceSolve(SudokuGrid grid) {
-  final emptyIndex = _findEmptyCell(grid);
-  if (emptyIndex == -1) return true;
-
-  for (var digit = 1; digit <= 9; digit++) {
-    if (!grid.isCandidate(emptyIndex, digit)) continue;
-
-    final peers = peersOf(emptyIndex);
-    var valid = true;
-    for (final peer in peers) {
-      if (grid.valueAt(peer) == digit) {
-        valid = false;
-        break;
-      }
-    }
-    if (!valid) continue;
-
-    grid.setValue(emptyIndex, digit);
-    if (_bruteForceSolve(grid)) return true;
-    grid.clearValue(emptyIndex);
-  }
-
-  return false;
-}
-
-int _findEmptyCell(SudokuGrid grid) {
-  for (var i = 0; i < 81; i++) {
-    if (grid.valueAt(i) == 0) return i;
-  }
-  return -1;
 }
