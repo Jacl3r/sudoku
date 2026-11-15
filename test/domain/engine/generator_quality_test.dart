@@ -23,10 +23,11 @@ String _spread(List<int> values) {
 
 void main() {
   test(
-    'puzzles below Expert can be finished by the solver and the coach',
+    'puzzles below Expert are finishable and inside their score band',
     () {
       final stuck = <Difficulty, List<String>>{};
       final coachDeadEnds = <Difficulty, List<String>>{};
+      final outOfBand = <Difficulty, List<int>>{};
       final unscored = <String>{};
 
       for (final difficulty in Difficulty.values) {
@@ -77,6 +78,11 @@ void main() {
           }
         }
 
+        final band = scoreBandFor(difficulty);
+        outOfBand[difficulty] = [
+          for (final score in scores)
+            if (band != null && !band.contains(score)) score,
+        ];
         stuck[difficulty] = stuckHere;
         coachDeadEnds[difficulty] = deadEndsHere;
 
@@ -133,6 +139,13 @@ void main() {
           reason:
               '${difficulty.displayName} produced puzzles the coach cannot '
               'walk to the end',
+        );
+        expect(
+          outOfBand[difficulty],
+          isEmpty,
+          reason:
+              '${difficulty.displayName} produced puzzles whose coach score '
+              'is outside its band',
         );
       }
     },

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:sudoku/domain/coach/coach_walk.dart';
+import 'package:sudoku/domain/coach/puzzle_score.dart';
 import 'package:sudoku/domain/engine/grid_builder.dart';
 import 'package:sudoku/domain/engine/has_unique_solution.dart';
 import 'package:sudoku/domain/engine/solver.dart';
@@ -42,14 +43,23 @@ class Generator {
       attempts++;
 
       // Below Expert the coach has to be able to walk the whole puzzle, so a
-      // player never hits a dead end. The cap keeps a coach gap from turning
-      // into an endless search: after it, the solver's verdict is enough.
-      final coachMustFinish =
+      // player never hits a dead end, and the work in that walk has to fit
+      // the difficulty. The cap keeps a coach gap from turning into an
+      // endless search: after it, the solver's verdict is enough.
+      final coachMustApprove =
           difficulty != Difficulty.expert && attempts <= coachAttemptLimit;
-      if (coachMustFinish && !coachCanFinish(puzzle)) continue;
+      if (coachMustApprove && !_coachApproves(puzzle, difficulty)) continue;
 
       return puzzle;
     }
+  }
+
+  bool _coachApproves(Puzzle puzzle, Difficulty difficulty) {
+    final walk = walkWithCoach(puzzle);
+    if (!walk.finished) return false;
+
+    final band = scoreBandFor(difficulty);
+    return band == null || band.contains(walk.score);
   }
 
   SudokuGrid? _digHoles(SudokuGrid solution, Difficulty difficulty) {
