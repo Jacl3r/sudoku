@@ -1,21 +1,44 @@
 import 'package:sudoku/domain/coach/coach.dart';
+import 'package:sudoku/domain/coach/puzzle_score.dart';
 import 'package:sudoku/domain/models/puzzle.dart';
 
-/// Whether the coach alone gets from the givens to the solved grid.
-///
+/// What happened when the coach walked a puzzle on its own.
+class CoachWalk {
+  const new({required this.finished, required this.techniques});
+
+  /// True when the coach got from the givens to the solved grid.
+  final bool finished;
+
+  /// The technique of every step the coach took, in order.
+  final List<String> techniques;
+
+  /// The work in the walk: the scores of all its steps added up.
+  int get score {
+    var total = 0;
+    for (final technique in techniques) {
+      total += techniqueScore(technique);
+    }
+    return total;
+  }
+}
+
 /// Walks the puzzle the way a player would who applies every coach step: a
 /// placement fills the cell, an elimination goes into the ledger. The notes
 /// stay empty, because the coach never reasons from them.
-bool coachCanFinish(Puzzle puzzle) {
+CoachWalk walkWithCoach(Puzzle puzzle) {
   final values = puzzle.given.values;
   final givens = puzzle.given.values;
   final solution = puzzle.solution.values;
   final notes = List<Set<int>>.generate(81, (_) => <int>{});
   final eliminations = List<Set<int>>.generate(81, (_) => <int>{});
+  final techniques = <String>[];
+
+  CoachWalk result({required bool finished}) =>
+      CoachWalk(finished: finished, techniques: techniques);
 
   // Every step fills a cell or removes a candidate, so 81 * 9 bounds the walk.
   for (var i = 0; i < 81 * 9; i++) {
-    if (!values.contains(0)) return true;
+    if (!values.contains(0)) return result(finished: true);
 
     final step = findCoachStep(
       values: values,
@@ -24,12 +47,13 @@ bool coachCanFinish(Puzzle puzzle) {
       solution: solution,
       givens: givens,
     );
-    if (step == null) return false;
+    if (step == null) return result(finished: false);
 
     final placement = step.placement;
     if (placement != null) {
-      if (values[placement.cell] != 0) return false;
+      if (values[placement.cell] != 0) return result(finished: false);
       values[placement.cell] = placement.digit;
+      techniques.add(step.technique);
       continue;
     }
 
@@ -43,8 +67,12 @@ bool coachCanFinish(Puzzle puzzle) {
       ledger.addAll(entry.value);
       if (ledger.length > before) removed = true;
     }
-    if (!removed) return false;
+    if (!removed) return result(finished: false);
+    techniques.add(step.technique);
   }
 
-  return !values.contains(0);
+  return result(finished: !values.contains(0));
 }
+
+/// Whether the coach alone gets from the givens to the solved grid.
+bool coachCanFinish(Puzzle puzzle) => walkWithCoach(puzzle).finished;

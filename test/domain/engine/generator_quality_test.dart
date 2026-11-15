@@ -3,12 +3,23 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sudoku/domain/coach/coach_walk.dart';
+import 'package:sudoku/domain/coach/puzzle_score.dart';
 import 'package:sudoku/domain/engine/generator.dart';
 import 'package:sudoku/domain/engine/solver.dart';
 import 'package:sudoku/domain/models/difficulty.dart';
 
 /// Puzzles sampled per difficulty. Raise it for steadier numbers.
-const _samples = 20;
+const _samples = 150;
+
+/// Lowest, the 10th, 25th, 50th, 75th and 90th percentile, and highest.
+String _spread(List<int> values) {
+  if (values.isEmpty) return 'none';
+  final sorted = values.toList()..sort();
+  int at(double share) => sorted[((sorted.length - 1) * share).round()];
+  return 'min ${sorted.first}, p10 ${at(0.1)}, p25 ${at(0.25)}, '
+      'median ${at(0.5)}, p75 ${at(0.75)}, p90 ${at(0.9)}, '
+      'max ${sorted.last} (${sorted.length} puzzles)';
+}
 
 void main() {
   test(
@@ -16,10 +27,13 @@ void main() {
     () {
       final stuck = <Difficulty, List<String>>{};
       final coachDeadEnds = <Difficulty, List<String>>{};
+      final unscored = <String>{};
 
       for (final difficulty in Difficulty.values) {
         final stuckHere = <String>[];
         final deadEndsHere = <String>[];
+        final scores = <int>[];
+        final walkLines = <String>[];
         final clueCounts = <int, int>{};
         final techniqueCounts = <String, int>{};
         var total = Duration.zero;
@@ -38,7 +52,25 @@ void main() {
 
           final result = solveLogically(puzzle.given);
           if (result.bruteForceUsed) stuckHere.add(values.join());
-          if (!coachCanFinish(puzzle)) deadEndsHere.add(values.join());
+
+          final walk = walkWithCoach(puzzle);
+          if (walk.finished) {
+            scores.add(walk.score);
+          } else {
+            deadEndsHere.add(values.join());
+          }
+          final steps = <String, int>{};
+          for (final technique in walk.techniques) {
+            if (!techniqueScores.containsKey(technique)) {
+              unscored.add(technique);
+            }
+            if (technique.endsWith('Single')) continue;
+            steps[technique] = (steps[technique] ?? 0) + 1;
+          }
+          walkLines.add(
+            '${walk.finished ? walk.score : 'dead end'}: '
+            '${[for (final e in steps.entries) '${e.key} x${e.value}'].join(', ')}',
+          );
           for (final technique in result.techniquesApplied.toSet()) {
             final name = '$technique';
             techniqueCounts[name] = (techniqueCounts[name] ?? 0) + 1;
@@ -65,6 +97,10 @@ void main() {
           'slowest ${slowest.inMilliseconds} ms',
         );
         print('clue counts: $clueSummary');
+        print('coach score: ${_spread(scores)}');
+        for (final line in walkLines) {
+          print('  walk $line');
+        }
         print('puzzles using each technique: $techniqueSummary');
         for (final puzzle in stuckHere) {
           print('  stuck: $puzzle');
@@ -73,6 +109,12 @@ void main() {
           print('  coach dead end: $puzzle');
         }
       }
+
+      expect(
+        unscored,
+        isEmpty,
+        reason: 'these coach techniques have no entry in techniqueScores',
+      );
 
       // Expert is allowed to be harder than the solver and the coach. The
       // others are not.
