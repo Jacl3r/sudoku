@@ -31,6 +31,19 @@ string. Renaming one silently turned its score into a default.
 - `puzzle_score.dart` is gone: the scores moved into the enum, the bands into the grading
   module.
 
+## Two solver bugs found on the way
+
+Both are in code from the original app and both only show on puzzles that need guessing.
+
+- `solveGrid` reported success but returned only the cells that propagation had filled.
+  Nothing in `lib/` used it, only tests. Fixed in `has_unique_solution.dart`, with a test.
+- The import took its solution from `solveLogically(...).solvedGrid`. That solver's
+  backtracking clears a cell without restoring the candidates it removed, so the search
+  fails and the grid stays incomplete. An imported puzzle that needs guessing was stored
+  with an incomplete solution, and every check against the solution was wrong for the
+  empty cells. The import now takes its solution from the fixed `solveGrid`.
+  `solvedGrid` itself is left as it is and no longer read by anything.
+
 ## Why `fits(target)` and not a single "typical" flag
 
 The original rules overlap: a Hard-level puzzle with at most two opening singles is accepted
@@ -49,7 +62,7 @@ the question has to name the level.
 - [ ] `puzzle_grade_test.dart` grades fixed puzzles: a singles-only puzzle is Easy, a puzzle
       the solver cannot finish is Expert.
 - [ ] The generator report shows no puzzle that does not fit its difficulty.
-- [ ] Importing a chain puzzle labels it Expert.
+- [ ] Importing a chain puzzle labels it Expert and stores a complete solution.
 - [ ] `flutter analyze` and all tests pass.
 
 ## Notes
