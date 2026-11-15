@@ -19,6 +19,30 @@ const _stuckAfterMedium =
 const _stuckAfterHard =
     '029600050040920070000005900000040020005003800010000700080000000103002507702000010';
 
+/// Real generated puzzles, graded once on CI. If one of these tests fails
+/// after a change to the coach or the bands, the bands need measuring again.
+
+/// Singles, two Pointing Pairs and a Box/Line Reduction.
+const _plainMedium =
+    '067401003000000008300729010005002100180006200006800400002068009004230001000000060';
+
+/// Eight locked-candidates steps and a Skyscraper.
+const _plainHard =
+    '000200000130040000048000309020000001000536200600800000000097006400050000073000080';
+
+/// Singles and one Skyscraper: Hard by its technique, too light for the band.
+const _thinHard =
+    '000700008004000065090400000300000001209040830070000020010567090000100000000090050';
+
+/// Four XY-Wings and a Skyscraper: Hard by its technique, too long for the band.
+const _longHard =
+    '000280040005070008000901000200000609078500000009008400804092015000000000010004020';
+
+/// Hard by its technique and inside the band, with at most two opening
+/// singles. The generator handed it out as Expert.
+const _tightHard =
+    '052009000300001095900000000090305071030900006700010000000500809045800000200000000';
+
 PuzzleGrade _grade(String givens) {
   final given = SudokuGrid.fromString(givens);
   final solution = solveGrid(SudokuGrid.fromString(givens));
@@ -68,8 +92,68 @@ void main() {
       expect(grade.score, isNull);
     });
 
+    test('a typical Medium fits Medium and nothing else', () {
+      final grade = _grade(_plainMedium);
+
+      expect(grade.difficulty, Difficulty.medium);
+      expect(grade.fits(Difficulty.medium), isTrue);
+      expect(grade.fits(Difficulty.easy), isFalse);
+      expect(grade.fits(Difficulty.hard), isFalse);
+      expect(grade.fits(Difficulty.expert), isFalse);
+    });
+
+    test('a typical Hard fits Hard and scores above the typical Medium', () {
+      final hard = _grade(_plainHard);
+      final medium = _grade(_plainMedium);
+
+      expect(hard.difficulty, Difficulty.hard);
+      expect(hard.fits(Difficulty.hard), isTrue);
+      expect(hard.fits(Difficulty.medium), isFalse);
+      expect(hard.score, greaterThan(medium.score!));
+    });
+
+    test('Hard by technique but outside the band keeps its label only', () {
+      for (final givens in [_thinHard, _longHard]) {
+        final grade = _grade(givens);
+
+        expect(grade.difficulty, Difficulty.hard, reason: givens);
+        expect(grade.coachable, isTrue, reason: givens);
+        expect(grade.fits(Difficulty.hard), isFalse, reason: givens);
+      }
+
+      expect(
+        _grade(_thinHard).score,
+        lessThan(_grade(_plainHard).score!),
+      );
+      expect(
+        _grade(_longHard).score,
+        greaterThan(_grade(_plainHard).score!),
+      );
+    });
+
+    test('the looser rule ignores the score', () {
+      expect(_grade(_thinHard).fitsLoosely(Difficulty.hard), isTrue);
+    });
+
+    test('a Hard puzzle with a tight opening fits Hard and Expert', () {
+      final grade = _grade(_tightHard);
+
+      expect(grade.difficulty, Difficulty.hard);
+      expect(grade.fits(Difficulty.hard), isTrue);
+      expect(grade.fits(Difficulty.expert), isTrue);
+    });
+
     test('whatever fits also fits loosely', () {
-      for (final givens in [_singlesOnly, _stuckAfterMedium, _stuckAfterHard]) {
+      for (final givens in [
+        _singlesOnly,
+        _stuckAfterMedium,
+        _stuckAfterHard,
+        _plainMedium,
+        _plainHard,
+        _thinHard,
+        _longHard,
+        _tightHard,
+      ]) {
         final grade = _grade(givens);
 
         for (final level in Difficulty.values) {
