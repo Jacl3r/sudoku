@@ -14,6 +14,19 @@ void main() {
       expect(solved?.values.every((element) => element != 0), isTrue);
     });
 
+    test('fills every cell of a puzzle that needs trial and error', () {
+      const givens =
+          '029600050040920070000005900000040020005003800010000700080000000103002507702000010';
+      final solved = solveGrid(SudokuGrid.fromString(givens));
+
+      expect(solved, isNotNull);
+      expect(solved!.values.contains(0), isFalse);
+      for (var i = 0; i < 81; i++) {
+        final given = givens.codeUnitAt(i) - 48;
+        if (given != 0) expect(solved.values[i], given);
+      }
+    });
+
     test('returns null for unsolvable puzzle', () {
       final unsolvableGrid = TestGrids.unsolvableGrid();
       final solved = solveGrid(SudokuGrid(values: unsolvableGrid.values));

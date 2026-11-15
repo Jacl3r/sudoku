@@ -57,3 +57,6 @@ advanced step on top of singles. The ceilings cut the top few percent. The Mediu
   That is why Easy sits at 630 (45 empty cells times 14).
 - Renaming a coach technique without updating `techniqueScores` silently turns its score
   into 100. The report test fails when it sees a technique without an entry.
+- 021 moved the scores into `CoachTechnique` and the bands into
+  `lib/domain/grading/puzzle_grade.dart`. `puzzle_score.dart`, `scoreBandFor` and
+  `techniqueScores` are the names from before that.

@@ -108,10 +108,14 @@ settings redesign (slices 008–011) and is the active one.
   Skyscraper and Two-String Kite rather than by the upstream `TurbotFish`. The
   upstream class is sound (see `docs/upstream-contribution.md`, "Turbot Fish
   retracted"); the coach just does not delegate to it.
-- Generated puzzles below Expert must be finishable by the coach. The generator
-  rejects a puzzle the solver only finished by brute force, and one the coach
-  cannot walk to the end (`docs/plans/019-coachable-generator.md`). Expert may
-  still end in a coach dead end.
+- One module grades a puzzle: `lib/domain/grading/puzzle_grade.dart`. The
+  generator and the import both ask it, and nothing else decides what Easy,
+  Medium, Hard or Expert means (`docs/plans/021-one-module-grades-a-puzzle.md`).
+- Generated puzzles below Expert must be finishable by the coach. A puzzle the
+  solver only finished by brute force is Expert, and one the coach cannot walk
+  to the end is not handed out below Expert
+  (`docs/plans/019-coachable-generator.md`). Expert may still end in a coach
+  dead end.
 - Medium and Hard are also held to a score band. The score is the sum of the
   coach's steps over its own walk of the puzzle, so a Hard puzzle is never just
   singles plus one advanced step (`docs/plans/020-score-difficulty.md`).

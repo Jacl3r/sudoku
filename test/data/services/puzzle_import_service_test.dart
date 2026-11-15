@@ -17,6 +17,18 @@ void main() {
       },
     );
 
+    test('a puzzle the solver cannot finish is imported as Expert', () async {
+      // The solver gets no further than medium techniques here and then has
+      // to guess. The old rule imported this as Medium.
+      const givens =
+          '002000045008092600047038002070300000300001050001050470005010398000080060803000000';
+      final service = PuzzleImportService();
+      final result = await service.loadPuzzleIntoGame(givens);
+
+      expect(result.difficulty, equals(Difficulty.expert));
+      expect(result.puzzle.solution.values.contains(0), isFalse);
+    });
+
     test('importPuzzle parses raw input then loads it', () async {
       final service = PuzzleImportService();
       final result = await service.importPuzzle(TestPuzzles.valid9Line);

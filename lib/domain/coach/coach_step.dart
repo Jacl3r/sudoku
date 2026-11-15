@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:sudoku/domain/coach/coach_technique.dart';
 
 /// One logical step the coach can explain, revealed in stages.
 ///
@@ -8,7 +9,8 @@ import 'package:flutter/foundation.dart';
 class CoachStep {
   const new({
     required this.headline,
-    required this.technique,
+    this.kind,
+    this.mistakeName,
     required this.about,
     required this.nudge,
     required this.explanation,
@@ -24,8 +26,15 @@ class CoachStep {
   /// Stage 1 text, e.g. "Look for a Skyscraper."
   final String headline;
 
-  /// Short technique name, e.g. "Skyscraper".
-  final String technique;
+  /// The technique behind this step. Null for a mistake step, which points
+  /// at something wrong on the board instead of teaching a technique.
+  final CoachTechnique? kind;
+
+  /// What a mistake step is called, e.g. "Mistake".
+  final String? mistakeName;
+
+  /// Short name shown for the step, e.g. "Skyscraper".
+  String get technique => kind?.label ?? mistakeName ?? '';
 
   /// What the technique is in general, independent of this board.
   final String about;
